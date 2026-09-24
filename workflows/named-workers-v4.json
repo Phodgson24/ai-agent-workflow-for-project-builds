@@ -1,0 +1,1022 @@
+{
+  "edges": [
+    {
+      "conds": [],
+      "from": "orch",
+      "fromSide": "r",
+      "id": "task",
+      "kind": "default",
+      "label": "task / fix instructions",
+      "note": "Fix rounds go to the same worker; its name does not change.",
+      "to": "slot",
+      "toSide": "l",
+      "badge": "blue"
+    },
+    {
+      "conds": [],
+      "from": "slot",
+      "fromSide": "l",
+      "id": "result",
+      "kind": "default",
+      "label": "result + handoff doc",
+      "note": "",
+      "to": "orch",
+      "toSide": "r",
+      "badge": "green"
+    },
+    {
+      "conds": [
+        "handover OR compacted worker finished its task OR milestone accepted"
+      ],
+      "from": "orch",
+      "fromSide": "t",
+      "id": "replace",
+      "kind": "conditional",
+      "label": "start fresh worker",
+      "note": "Names it: same M, H+1 after a handover or a compacted worker; M+1, H00 for the next milestone (see the Orchestrator rules).",
+      "to": "slot",
+      "toSide": "t",
+      "badge": "violet"
+    },
+    {
+      "conds": [],
+      "from": "slot",
+      "fromSide": "r",
+      "id": "edits",
+      "kind": "default",
+      "label": "reads + edits",
+      "note": "",
+      "to": "repo",
+      "toSide": "l"
+    },
+    {
+      "conds": [],
+      "from": "orch",
+      "fromSide": "b",
+      "id": "review",
+      "kind": "default",
+      "label": "reads to review + milestones.md",
+      "note": "Read-only for review. Also reads milestones.md for names and writes progress.md.",
+      "to": "repo",
+      "toSide": "b"
+    }
+  ],
+  "name": "user agent + project folder (named workers) v4",
+  "nodes": [
+    {
+      "comments": [],
+      "desc": "The orchestrator slot. Orchestrator chats rotate through it (00 - Orchestrator O01, O02…) with the same context rule as workers.",
+      "h": 150,
+      "id": "orch",
+      "name": "Orchestrator Thread",
+      "path": "",
+      "rules": [],
+      "tags": [],
+      "type": "group",
+      "w": 260,
+      "x": -274,
+      "y": 158,
+      "sub": {
+        "nodes": [
+          {
+            "desc": "Pinned chat, never renamed. Plans the work from milestones.md, names and starts every worker, reviews each result, and keeps progress.md up to date. Tells you each new worker's exact name. After each review it checks its context room.",
+            "path": "",
+            "tags": [
+              "pinned"
+            ],
+            "rules": [
+              {
+                "if": [
+                  "result passes review"
+                ],
+                "then": "accept the task"
+              },
+              {
+                "if": [
+                  "result fails review"
+                ],
+                "then": "send fix instructions to the SAME worker (name unchanged)"
+              },
+              {
+                "if": [
+                  "worker handed off mid-task"
+                ],
+                "then": "start fresh worker: same M, H+1; it reads the handoff doc first"
+              },
+              {
+                "if": [
+                  "result says compacted: replace me"
+                ],
+                "then": "after accepting, start a fresh worker for the next task: same M, H+1 (or M+1, H00 if the milestone is done)"
+              },
+              {
+                "if": [
+                  "milestone accepted"
+                ],
+                "then": "next worker is M+1, H00 - next name from milestones.md"
+              },
+              {
+                "if": [
+                  "a new worker is started"
+                ],
+                "then": "tell the user its exact name; log it in progress.md; archive the previous worker chat"
+              }
+            ],
+            "comments": [],
+            "id": "co",
+            "type": "agent",
+            "x": 0,
+            "y": 0,
+            "w": 240,
+            "h": 160,
+            "name": "Current orchestrator · 00 - Orchestrator O01",
+            "provider": "codex",
+            "model": "gpt-6-astra",
+            "effort": "high"
+          },
+          {
+            "desc": "Checked by the orchestrator itself, following AGENTS.md. Context room = measured by Codex (code), not the AI: /status shows what is left.",
+            "path": "",
+            "tags": [
+              "by: orchestrator",
+              "measured by: Codex"
+            ],
+            "rules": [],
+            "comments": [],
+            "id": "ochk",
+            "type": "decision",
+            "x": 376,
+            "y": -8,
+            "w": 200,
+            "h": 120,
+            "name": "Context check (after each review)"
+          },
+          {
+            "desc": "Same rule as workers: reach a safe point, commit, then compact once (first time) or hand off (already compacted).",
+            "path": "",
+            "tags": [],
+            "rules": [],
+            "comments": [],
+            "id": "oho",
+            "type": "group",
+            "x": 360,
+            "y": 340,
+            "w": 260,
+            "h": 150,
+            "name": "Context full: compact or hand off",
+            "sub": {
+              "edges": [
+                {
+                  "conds": [],
+                  "from": "pin:otoho",
+                  "fromSide": "",
+                  "id": "h1",
+                  "kind": "default",
+                  "label": "",
+                  "note": "",
+                  "to": "cp",
+                  "toSide": ""
+                },
+                {
+                  "conds": [
+                    "current step finished"
+                  ],
+                  "from": "cp",
+                  "fromSide": "",
+                  "id": "h2",
+                  "kind": "conditional",
+                  "label": "yes",
+                  "note": "",
+                  "to": "cm",
+                  "toSide": ""
+                },
+                {
+                  "conds": [],
+                  "from": "cm",
+                  "fromSide": "",
+                  "id": "h3",
+                  "kind": "default",
+                  "label": "then",
+                  "note": "",
+                  "to": "cq",
+                  "toSide": ""
+                },
+                {
+                  "conds": [],
+                  "from": "hd",
+                  "fromSide": "",
+                  "id": "h4",
+                  "kind": "default",
+                  "label": "send",
+                  "note": "",
+                  "to": "pin:ohodoc",
+                  "toSide": ""
+                },
+                {
+                  "conds": [],
+                  "from": "cp",
+                  "fromSide": "b",
+                  "id": "h5",
+                  "kind": "conditional",
+                  "label": "no",
+                  "note": "",
+                  "to": "kw",
+                  "toSide": "t"
+                },
+                {
+                  "conds": [],
+                  "from": "kw",
+                  "fromSide": "l",
+                  "id": "h6",
+                  "kind": "default",
+                  "label": "check again",
+                  "note": "",
+                  "to": "cp",
+                  "toSide": "l"
+                },
+                {
+                  "conds": [
+                    "not compacted yet this task"
+                  ],
+                  "from": "cq",
+                  "fromSide": "",
+                  "id": "q1",
+                  "kind": "conditional",
+                  "label": "no → compact once",
+                  "note": "",
+                  "to": "cmp",
+                  "toSide": ""
+                },
+                {
+                  "conds": [
+                    "already compacted this task OR work quality slipping"
+                  ],
+                  "from": "cq",
+                  "fromSide": "",
+                  "id": "q2",
+                  "kind": "conditional",
+                  "label": "yes → hand off",
+                  "note": "",
+                  "to": "hd",
+                  "toSide": ""
+                },
+                {
+                  "conds": [],
+                  "from": "cmp",
+                  "fromSide": "",
+                  "id": "c1",
+                  "kind": "default",
+                  "label": "continue",
+                  "note": "",
+                  "to": "pin:ocont",
+                  "toSide": ""
+                }
+              ],
+              "nodes": [
+                {
+                  "comments": [],
+                  "desc": "Safe point = the current review or hand-out is finished and progress.md is up to date.",
+                  "h": 88,
+                  "id": "cp",
+                  "name": "At a safe point?",
+                  "path": "",
+                  "rules": [],
+                  "tags": [],
+                  "type": "decision",
+                  "w": 200,
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "comments": [],
+                  "desc": "Commit message starts with the orchestrator ID: [O01] ...",
+                  "h": 88,
+                  "id": "cm",
+                  "name": "Commit progress.md",
+                  "path": "",
+                  "rules": [],
+                  "tags": [
+                    "git"
+                  ],
+                  "type": "tool",
+                  "w": 200,
+                  "x": 360,
+                  "y": 0
+                },
+                {
+                  "comments": [],
+                  "desc": "handoffs/O01-orchestrator.md (named after the orchestrator writing it). Sections: Milestone status, Active worker + ID, Open reviews, Next steps, Key decisions.",
+                  "h": 104,
+                  "id": "hd",
+                  "name": "Write handoff doc",
+                  "path": "",
+                  "rules": [],
+                  "tags": [],
+                  "type": "memory",
+                  "w": 216,
+                  "x": 1100,
+                  "y": 190
+                },
+                {
+                  "comments": [],
+                  "desc": "Finish the review or hand-out in progress, then check again. (Context is already filling, so don't start a new one.)",
+                  "h": 96,
+                  "id": "kw",
+                  "name": "Finish the current step",
+                  "path": "",
+                  "rules": [],
+                  "tags": [],
+                  "type": "note",
+                  "w": 200,
+                  "x": 0,
+                  "y": 220
+                },
+                {
+                  "comments": [],
+                  "desc": "The orchestrator reads its summary: a COMPACTED: n line means yes. Quality slipping (re-reviewing, losing track of milestones or worker names) counts as yes.",
+                  "h": 96,
+                  "id": "cq",
+                  "name": "Compacted yet this task?",
+                  "rules": [],
+                  "tags": [],
+                  "type": "decision",
+                  "w": 208,
+                  "x": 720,
+                  "y": -4
+                },
+                {
+                  "comments": [],
+                  "desc": "The orchestrator runs /compact now, at this safe point. If Codex already compacted on its own, that counts as the one compaction.",
+                  "h": 120,
+                  "id": "cmp",
+                  "name": "Compact the chat (at a safe point)",
+                  "path": "",
+                  "rules": [],
+                  "tags": [
+                    "by: worker (/compact)",
+                    "or: Codex (automatic)"
+                  ],
+                  "type": "tool",
+                  "w": 232,
+                  "x": 1100,
+                  "y": -190
+                }
+              ],
+              "pins": {
+                "otoho": {
+                  "x": -380,
+                  "y": 14
+                },
+                "ocont": {
+                  "x": 1460,
+                  "y": -160
+                },
+                "ohodoc": {
+                  "x": 1460,
+                  "y": 212
+                }
+              },
+              "spread": {
+                "x": 0,
+                "y": 0
+              }
+            }
+          },
+          {
+            "desc": "Started by you in a new chat (the orchestrator tells you its name). Reads the latest orchestrator handoff doc and progress.md first, then takes over. Pin it and archive the old one.",
+            "path": "",
+            "tags": [],
+            "rules": [],
+            "comments": [],
+            "id": "fo",
+            "type": "agent",
+            "x": 368,
+            "y": 620,
+            "w": 240,
+            "h": 144,
+            "name": "Fresh orchestrator · 00 - Orchestrator O02",
+            "provider": "codex",
+            "model": "gpt-6-astra",
+            "effort": "high"
+          }
+        ],
+        "edges": [
+          {
+            "id": "o1",
+            "from": "pin:result",
+            "to": "co",
+            "kind": "default",
+            "label": "result arrives",
+            "conds": [],
+            "note": "",
+            "fromSide": "",
+            "toSide": ""
+          },
+          {
+            "id": "o2",
+            "from": "co",
+            "to": "pin:task",
+            "kind": "default",
+            "label": "task / fix instructions",
+            "conds": [],
+            "note": "",
+            "fromSide": "",
+            "toSide": ""
+          },
+          {
+            "id": "o3",
+            "from": "co",
+            "to": "pin:replace",
+            "kind": "default",
+            "label": "start fresh worker",
+            "conds": [],
+            "note": "",
+            "fromSide": "",
+            "toSide": ""
+          },
+          {
+            "id": "o4",
+            "from": "co",
+            "to": "pin:review",
+            "kind": "default",
+            "label": "reads to review",
+            "conds": [],
+            "note": "",
+            "fromSide": "",
+            "toSide": ""
+          },
+          {
+            "id": "o5",
+            "from": "co",
+            "to": "ochk",
+            "kind": "default",
+            "label": "after each review",
+            "conds": [],
+            "note": "",
+            "fromSide": "",
+            "toSide": ""
+          },
+          {
+            "id": "okeep",
+            "from": "ochk",
+            "to": "co",
+            "kind": "conditional",
+            "label": "room left → keep orchestrating",
+            "conds": [
+              "context has room"
+            ],
+            "note": "",
+            "fromSide": "",
+            "toSide": ""
+          },
+          {
+            "id": "otoho",
+            "from": "ochk",
+            "to": "oho",
+            "kind": "conditional",
+            "label": "getting full → context full",
+            "conds": [
+              "context getting full OR work quality slipping"
+            ],
+            "note": "",
+            "fromSide": "",
+            "toSide": "",
+            "badge": "orange"
+          },
+          {
+            "id": "ocont",
+            "from": "oho",
+            "to": "co",
+            "kind": "default",
+            "label": "continue (compacted)",
+            "conds": [],
+            "note": "After compacting once, the same orchestrator carries on. Its summary now starts with COMPACTED: 1.",
+            "fromSide": "",
+            "toSide": "",
+            "badge": "red"
+          },
+          {
+            "id": "ohodoc",
+            "from": "oho",
+            "to": "fo",
+            "kind": "default",
+            "label": "handoff doc → you start a fresh orchestrator",
+            "conds": [],
+            "note": "The orchestrator tells you the new chat name (same rule as workers: 00 - Orchestrator O+1).",
+            "fromSide": "",
+            "toSide": "",
+            "badge": "cyan"
+          },
+          {
+            "id": "o9",
+            "from": "fo",
+            "to": "co",
+            "kind": "default",
+            "label": "takes over as current orchestrator",
+            "conds": [],
+            "note": "",
+            "fromSide": "",
+            "toSide": ""
+          }
+        ],
+        "pins": {
+          "task": {
+            "x": -400,
+            "y": -96
+          },
+          "replace": {
+            "x": -400,
+            "y": 8
+          },
+          "result": {
+            "x": -400,
+            "y": 112
+          },
+          "review": {
+            "x": 16,
+            "y": -200
+          }
+        },
+        "spread": {
+          "x": 0,
+          "y": 0
+        }
+      }
+    },
+    {
+      "comments": [],
+      "desc": "One worker slot. Workers rotate through it, each named M##_H## - milestone name.",
+      "h": 150,
+      "id": "slot",
+      "name": "Worker Thread",
+      "path": "",
+      "rules": [],
+      "sub": {
+        "edges": [
+          {
+            "conds": [],
+            "from": "pin:task",
+            "fromSide": "",
+            "id": "i1",
+            "kind": "default",
+            "label": "",
+            "note": "",
+            "to": "cw",
+            "toSide": ""
+          },
+          {
+            "conds": [],
+            "from": "cw",
+            "fromSide": "t",
+            "id": "i2",
+            "kind": "default",
+            "label": "reads + edits",
+            "note": "",
+            "to": "pin:edits",
+            "toSide": "b"
+          },
+          {
+            "conds": [],
+            "from": "cw",
+            "fromSide": "",
+            "id": "i3",
+            "kind": "default",
+            "label": "after each step",
+            "note": "",
+            "to": "chk",
+            "toSide": ""
+          },
+          {
+            "conds": [
+              "task finished"
+            ],
+            "from": "chk",
+            "fromSide": "",
+            "id": "i4",
+            "kind": "conditional",
+            "label": "task finished → send result",
+            "note": "The worker decides the task is finished (definition of done, tests pass) and adds \"compacted: replace me\" if its summary carries a COMPACTED marker. The Orchestrator then reviews.",
+            "to": "pin:result",
+            "toSide": ""
+          },
+          {
+            "conds": [
+              "context getting full OR work quality slipping"
+            ],
+            "from": "chk",
+            "fromSide": "",
+            "id": "toho",
+            "kind": "conditional",
+            "label": "getting full → context full",
+            "note": "Codex measures the context (it warns or compacts at its limit). The worker notices quality slipping (repeating work, losing earlier decisions). Either way it goes to \"Context full\", which decides compact vs hand off.",
+            "to": "ho",
+            "toSide": "",
+            "badge": "orange"
+          },
+          {
+            "badge": "cyan",
+            "conds": [],
+            "from": "ho",
+            "fromSide": "r",
+            "id": "hodoc",
+            "kind": "default",
+            "label": "handoff doc",
+            "note": "",
+            "to": "pin:result",
+            "toSide": "l"
+          },
+          {
+            "conds": [],
+            "from": "pin:replace",
+            "fromSide": "l",
+            "id": "i7",
+            "kind": "default",
+            "label": "reads the latest handoff doc (if any), then starts",
+            "note": "A handoff doc exists only after a mid-task handover. After a compacted worker finishes, or at a new milestone (M+1, H00), the fresh worker starts clean.",
+            "to": "fw",
+            "toSide": "r"
+          },
+          {
+            "conds": [],
+            "from": "fw",
+            "fromSide": "l",
+            "id": "i8",
+            "kind": "default",
+            "label": "takes over as current worker",
+            "note": "",
+            "to": "cw",
+            "toSide": "b"
+          },
+          {
+            "conds": [
+              "task not finished",
+              "context has room"
+            ],
+            "from": "chk",
+            "fromSide": "t",
+            "id": "keep",
+            "kind": "conditional",
+            "label": "room left → keep working",
+            "note": "The worker keeps going: nothing to decide while the task is unfinished and Codex has not compacted.",
+            "to": "cw",
+            "toSide": "t"
+          },
+          {
+            "conds": [],
+            "from": "pin:result",
+            "fromSide": "b",
+            "id": "loop",
+            "kind": "async",
+            "label": "orchestrator reviews; new worker if handed off or compacted",
+            "note": "This hop happens on the level above (Overview): the result or handoff doc goes to the Orchestrator, which starts the fresh worker.",
+            "to": "pin:replace",
+            "toSide": "t"
+          },
+          {
+            "badge": "red",
+            "conds": [],
+            "from": "ho",
+            "fromSide": "",
+            "id": "cont",
+            "kind": "default",
+            "label": "continue same task (compacted)",
+            "note": "After compacting once, the same worker carries on with the same task. Its summary now starts with COMPACTED: 1.",
+            "to": "cw",
+            "toSide": ""
+          }
+        ],
+        "nodes": [
+          {
+            "comments": [],
+            "desc": "Works the task. Prefixes every commit with its ID, e.g. [M01_H00]. After each step it checks the task and its context room. May compact the chat at a safe point; a worker that compacted retires when its task is done.",
+            "effort": "high",
+            "h": 144,
+            "id": "cw",
+            "model": "gpt-6-sol",
+            "name": "Current worker · M01_H00 - ui improvement",
+            "path": "",
+            "provider": "codex",
+            "rules": [],
+            "tags": [],
+            "type": "agent",
+            "w": 232,
+            "x": 0,
+            "y": 0
+          },
+          {
+            "comments": [],
+            "desc": "Checked by the worker agent itself (the same Codex chat), following AGENTS.md. Task done? = the worker, against the task definition of done and tests. Context room = measured by Codex (code), not the AI: Codex compacts automatically at its limit, and /status shows what is left. Whether to compact or hand off is decided inside \"Context full\".",
+            "h": 120,
+            "id": "chk",
+            "name": "Context check (after each step)",
+            "path": "",
+            "rules": [],
+            "tags": [
+              "by: worker agent",
+              "measured by: Codex"
+            ],
+            "type": "decision",
+            "w": 200,
+            "x": 344,
+            "y": -8
+          },
+          {
+            "comments": [],
+            "desc": "What a worker does when its context fills up: reach a safe point, commit, then compact once (first time) or hand off (already compacted).",
+            "h": 150,
+            "id": "ho",
+            "name": "Context full: compact or hand off",
+            "path": "",
+            "rules": [],
+            "sub": {
+              "edges": [
+                {
+                  "conds": [],
+                  "from": "pin:toho",
+                  "fromSide": "",
+                  "id": "h1",
+                  "kind": "default",
+                  "label": "",
+                  "note": "",
+                  "to": "cp",
+                  "toSide": ""
+                },
+                {
+                  "conds": [
+                    "current step finished"
+                  ],
+                  "from": "cp",
+                  "fromSide": "",
+                  "id": "h2",
+                  "kind": "conditional",
+                  "label": "yes",
+                  "note": "",
+                  "to": "cm",
+                  "toSide": ""
+                },
+                {
+                  "conds": [],
+                  "from": "cm",
+                  "fromSide": "",
+                  "id": "h3",
+                  "kind": "default",
+                  "label": "then",
+                  "note": "",
+                  "to": "cq",
+                  "toSide": ""
+                },
+                {
+                  "conds": [],
+                  "from": "hd",
+                  "fromSide": "",
+                  "id": "h4",
+                  "kind": "default",
+                  "label": "send",
+                  "note": "",
+                  "to": "pin:hodoc",
+                  "toSide": ""
+                },
+                {
+                  "conds": [],
+                  "from": "cp",
+                  "fromSide": "b",
+                  "id": "h5",
+                  "kind": "conditional",
+                  "label": "no",
+                  "note": "",
+                  "to": "kw",
+                  "toSide": "t"
+                },
+                {
+                  "conds": [],
+                  "from": "kw",
+                  "fromSide": "l",
+                  "id": "h6",
+                  "kind": "default",
+                  "label": "check again",
+                  "note": "",
+                  "to": "cp",
+                  "toSide": "l"
+                },
+                {
+                  "conds": [
+                    "not compacted yet this task"
+                  ],
+                  "from": "cq",
+                  "fromSide": "",
+                  "id": "q1",
+                  "kind": "conditional",
+                  "label": "no → compact once",
+                  "note": "",
+                  "to": "cmp",
+                  "toSide": ""
+                },
+                {
+                  "conds": [
+                    "already compacted this task OR work quality slipping"
+                  ],
+                  "from": "cq",
+                  "fromSide": "",
+                  "id": "q2",
+                  "kind": "conditional",
+                  "label": "yes → hand off",
+                  "note": "",
+                  "to": "hd",
+                  "toSide": ""
+                },
+                {
+                  "conds": [],
+                  "from": "cmp",
+                  "fromSide": "",
+                  "id": "c1",
+                  "kind": "default",
+                  "label": "continue",
+                  "note": "",
+                  "to": "pin:cont",
+                  "toSide": ""
+                }
+              ],
+              "nodes": [
+                {
+                  "comments": [],
+                  "desc": "Safe point = the current step is finished and no edit is half-done.",
+                  "h": 88,
+                  "id": "cp",
+                  "name": "At a safe point?",
+                  "path": "",
+                  "rules": [],
+                  "tags": [],
+                  "type": "decision",
+                  "w": 200,
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "comments": [],
+                  "desc": "Commit message starts with the worker ID: [M01_H00] ...",
+                  "h": 88,
+                  "id": "cm",
+                  "name": "Commit work in progress",
+                  "path": "",
+                  "rules": [],
+                  "tags": [
+                    "git"
+                  ],
+                  "type": "tool",
+                  "w": 200,
+                  "x": 360,
+                  "y": 0
+                },
+                {
+                  "comments": [],
+                  "desc": "handoffs/M01_H00-ui-improvement.md (named after the worker writing it). Sections: Done, Next, Open issues, Files touched, How to verify.",
+                  "h": 104,
+                  "id": "hd",
+                  "name": "Write handoff doc",
+                  "path": "",
+                  "rules": [],
+                  "tags": [],
+                  "type": "memory",
+                  "w": 216,
+                  "x": 1100,
+                  "y": 190
+                },
+                {
+                  "comments": [],
+                  "desc": "Never stop mid-edit. Finish this one step, then check again. (Context is already filling, so don't start new work.)",
+                  "h": 96,
+                  "id": "kw",
+                  "name": "Finish the current step",
+                  "path": "",
+                  "rules": [],
+                  "tags": [],
+                  "type": "note",
+                  "w": 200,
+                  "x": 0,
+                  "y": 220
+                },
+                {
+                  "comments": [],
+                  "desc": "The worker reads its summary: a COMPACTED: n line means yes. Quality slipping (repeating work, losing earlier decisions) counts as yes.",
+                  "h": 96,
+                  "id": "cq",
+                  "name": "Compacted yet this task?",
+                  "rules": [],
+                  "tags": [],
+                  "type": "decision",
+                  "w": 208,
+                  "x": 720,
+                  "y": -4
+                },
+                {
+                  "comments": [],
+                  "desc": "The worker runs /compact now, at this safe point, after committing. If Codex already compacted on its own, that counts as the one compaction. compact_prompt makes every summary start with COMPACTED: n.",
+                  "h": 120,
+                  "id": "cmp",
+                  "name": "Compact the chat (at a safe point)",
+                  "path": "",
+                  "rules": [],
+                  "tags": [
+                    "by: worker (/compact)",
+                    "or: Codex (automatic)"
+                  ],
+                  "type": "tool",
+                  "w": 232,
+                  "x": 1100,
+                  "y": -190
+                }
+              ],
+              "pins": {
+                "cont": {
+                  "x": 1460,
+                  "y": -160
+                },
+                "hodoc": {
+                  "x": 1460,
+                  "y": 212
+                },
+                "toho": {
+                  "x": -380,
+                  "y": 14
+                }
+              },
+              "spread": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            "tags": [],
+            "type": "group",
+            "w": 260,
+            "x": 352,
+            "y": 340
+          },
+          {
+            "comments": [],
+            "desc": "Started and named by the orchestrator: same M, H+1 after a handover (reads the last handoff doc first), or M+1, H00 for the next milestone (starts clean).",
+            "effort": "high",
+            "h": 144,
+            "id": "fw",
+            "model": "gpt-6-sol",
+            "name": "Fresh worker · M01_H01 or M02_H00",
+            "path": "",
+            "provider": "codex",
+            "rules": [],
+            "tags": [],
+            "type": "agent",
+            "w": 232,
+            "x": 360,
+            "y": 600
+          }
+        ],
+        "pins": {
+          "edits": {
+            "x": 12,
+            "y": -170
+          },
+          "replace": {
+            "x": 1160,
+            "y": 610
+          },
+          "result": {
+            "x": 1160,
+            "y": 230
+          },
+          "task": {
+            "x": -340,
+            "y": 40
+          }
+        },
+        "spread": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "tags": [],
+      "type": "group",
+      "w": 260,
+      "x": 396,
+      "y": 160
+    },
+    {
+      "comments": [],
+      "desc": "AGENTS.md (naming + context rules) · milestones.md · progress.md · handoffs/ · .codex/config.toml (compact_prompt)",
+      "h": 120,
+      "id": "repo",
+      "name": "my-app",
+      "path": "~/code/my-app",
+      "rules": [],
+      "tags": [],
+      "type": "folder",
+      "w": 216,
+      "x": 839,
+      "y": 176
+    }
+  ],
+  "notes": "Worker names: M##_H## - milestone name (e.g. M01_H00 - ui improvement). M = milestone, H = handover within that milestone. New milestone -> M+1, H00. Worker replaced mid-milestone -> same M, H+1. Fix rounds keep the same worker and name. The same ID goes on the chat title, handoff doc, commits and progress log. Rules live in AGENTS.md; milestone names in milestones.md. Orchestrator chats rotate too: 00 - Orchestrator O01, O02… (O = orchestrator handover). Same rule as workers: compact once at a safe point, hand off the second time; you start the fresh orchestrator chat.",
+  "rules": [],
+  "spread": {
+    "x": 0,
+    "y": 3
+  }
+}

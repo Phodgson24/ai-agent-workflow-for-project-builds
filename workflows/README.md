@@ -4,14 +4,15 @@ Setups saved in the Agent Flow Sketchpad, exported as canvas JSON. The live copi
 
 | File | Name in the app | Boxes · links | Saved (UTC) | App db id |
 |---|---|---|---|---|
-| ★ `named-workers-v3.json` | user agent + project folder (named workers) v3 | 13 · 5 | 2026-09-24 | `namedworkersv3` |
+| ★ `named-workers-v4.json` | user agent + project folder (named workers) v4 | 23 · 5 | 2026-09-24 | `namedworkersv4` |
+| `named-workers-v3.json` | … (named workers) v3 | 13 · 5 | 2026-09-24 | `namedworkersv3` |
 | `archive/named-workers-v2.json` | … (named workers)v2 | 12 · 5 | 2026-09-24 20:00 | `dhhsk0icnb92x7` |
 | `archive/named-workers.json` | … (named workers) | 11 · 6 | 2026-09-24 19:14 | `namedworkers01` |
 | `archive/sub-flow.json` | … (sub-flow) | 11 · 5 | 2026-09-24 15:00 | `subflowrelay01` |
 | `archive/improved.json` | … (improved) | 4 · 5 | 2026-09-24 14:31 | `improvedrelay01` |
 | `archive/original.json` | user agent + project folder | 4 · 6 | 2026-09-24 14:25 | `rz9azhghfmjxsh` |
 
-★ = main, the one to reference and build on. v3 = v2 with compaction merged into the handoff sub-flow (now "Context full: compact or hand off"). "Boxes" counts boxes on every level; "links" counts only the top level.
+★ = main, the one to reference and build on. v4 = v3 with the Orchestrator turned into an "Orchestrator Thread" sub-flow that follows the same compact-once-then-hand-off rule as workers. v3 = v2 with compaction merged into the handoff sub-flow (now "Context full: compact or hand off"). "Boxes" counts boxes on every level; "links" counts only the top level.
 
 ## Reading the JSON (for people and AI agents)
 
