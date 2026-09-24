@@ -307,13 +307,13 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-
 
 /* match badges: a lit strip along the box edge where a link meets a sub-flow box (level above) or its
    entry/exit point (inside), with the end of the link in the same colour. Drawn in its own layer above
-   the boxes, and counter-scaled so it stays the same size on screen at any zoom. */
+   the boxes, and sized in canvas units so it zooms exactly like the box and line it belongs to. */
 :root{--b-red:#D93A3A;--b-orange:#E07B16;--b-yellow:#D4A514;--b-green:#2F9E44;--b-cyan:#0EA5C6;--b-blue:#3B6FE0;--b-violet:#8B5CF6;--b-pink:#DB4FA0}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--b-red:#F26060;--b-orange:#F59A3C;--b-yellow:#EAC23A;--b-green:#4CC265;--b-cyan:#2EC4E4;--b-blue:#6A93F5;--b-violet:#A78BFA;--b-pink:#F07BBE}}
 :root[data-theme="dark"]{--b-red:#F26060;--b-orange:#F59A3C;--b-yellow:#EAC23A;--b-green:#4CC265;--b-cyan:#2EC4E4;--b-blue:#6A93F5;--b-violet:#A78BFA;--b-pink:#F07BBE}
 #badges{position:absolute;left:0;top:0;pointer-events:none;z-index:4}   /* above boxes and their link handles; clicks pass through */
-.bsock{position:absolute;width:0;height:0;transform:rotate(var(--a)) scale(calc(1 / var(--z,1)));transition:opacity .12s}
-.bsock .rail{position:absolute;left:-2px;top:-17px;width:4px;height:34px;border-radius:2px;background:var(--bc);box-shadow:0 0 0 1.5px var(--surface)}
+.bsock{position:absolute;width:0;height:0;transform:rotate(var(--a));transition:opacity .12s}
+.bsock .rail{position:absolute;left:-2.5px;top:-20px;width:5px;height:40px;border-radius:2px;background:var(--bc);box-shadow:0 0 0 1.5px var(--surface)}
 .bstub{fill:none;stroke:var(--bc);stroke-width:2.6;pointer-events:none;transition:opacity .12s}
 .a.badged{fill:var(--bc)}
 #world.focus .bsock:not(.rel),#world.focus .bstub:not(.rel){opacity:.3}
@@ -838,8 +838,7 @@ function computeFlags() {
 const vp = $('#vp'), world = $('#world');
 function applyView() {
   world.style.transform = `translate(${view.x}px,${view.y}px) scale(${view.z})`;
-  world.style.setProperty('--z', view.z);   // drives the zoom-to-reveal fade on sub-flow boxes, and keeps badges a fixed size
-  sizeStubs();
+  world.style.setProperty('--z', view.z);   // drives the zoom-to-reveal fade on sub-flow boxes
   if (typeof schedulePins === 'function') schedulePins();   // comment pins follow the canvas
   const g = 24 * view.z;
   vp.style.backgroundSize = `${g}px ${g}px`;
@@ -1171,11 +1170,11 @@ function renderEdges() {
   $('#elabels').innerHTML = labels; $('#hg').innerHTML = handles;
   declutterLabels(byId);
 }
-// Colour only the last stretch of a badged link, at the badged end: about 70px on screen at any zoom
-// (never more than 45% of the link). Re-run on zoom, since the canvas scale changes what 70px is.
+// Colour only the last stretch of a badged link, at the badged end: 60 canvas units (never more than
+// 45% of the link), so it zooms with the line like everything else.
 function sizeStubs() {
   document.querySelectorAll('#eg .bstub').forEach(el => {
-    const L = el._len ??= el.getTotalLength(), k = Math.min(L * .45, 70 / view.z);
+    const L = el.getTotalLength(), k = Math.min(L * .45, 60);
     el.style.strokeDasharray = el.dataset.end === 'from' ? `${k} ${L}` : `0 ${L - k} ${k} 0`;
   });
 }
