@@ -9,7 +9,8 @@ Paste the section below into the project's `AGENTS.md` (Codex reads it once per 
 Read this before starting, naming or replacing any worker.
 
 ### Names
-- Orchestrator chat: `00 - Orchestrator`. It is pinned and never renamed.
+- Orchestrator chat: `00 - Orchestrator O##`, for example `00 - Orchestrator O01`. It is pinned. On a handover
+  only the `O##` code changes (see "Orchestrator handovers" below).
 - Worker chats: `M##_H## - milestone name`, for example `M01_H00 - ui improvement`.
   - `M##` = milestone number, two digits, taken from `milestones.md`.
   - `H##` = handover number within that milestone. The first worker on a milestone is `H00`.
@@ -52,9 +53,23 @@ A fresh worker reads the most recent handoff doc for its milestone before doing 
   The orchestrator then starts a fresh worker for the next task (same M, H+1; or M+1, H00 if the
   milestone is done). A worker that never compacted may continue with the next task.
 
+### Orchestrator handovers
+The orchestrator follows the same context rule as workers: compact once, then hand off.
+- `O##` = orchestrator handover number, two digits. The first orchestrator is `O01`.
+- After each review, check the context room (Codex measures it; `/status` shows what is left).
+- Getting full, and you have not compacted yet: at a safe point (the current review or hand-out is
+  finished and `progress.md` is up to date), commit `progress.md` as `[O01] ...`, then run `/compact`
+  and carry on.
+- Getting full again after compacting, or losing track of milestones or worker names: at the next
+  safe point, commit `progress.md`, then write `handoffs/O01-orchestrator.md` with these sections:
+  **Milestone status** · **Active worker + ID** · **Open reviews** · **Next steps** · **Key decisions**.
+- Tell the user the next orchestrator's exact name (`00 - Orchestrator O02`) on one line.
+- A fresh orchestrator reads the latest orchestrator handoff doc and `progress.md` before doing
+  anything else, then carries on from where the last one stopped.
+
 ### Housekeeping
 - Archive a worker's chat once its work is accepted or handed off.
-  The sidebar should only show `00 - Orchestrator` and the one active worker.
+  The sidebar should only show the current `00 - Orchestrator O##` and the one active worker.
 
 ---
 
