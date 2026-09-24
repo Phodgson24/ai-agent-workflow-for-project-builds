@@ -1,0 +1,150 @@
+{
+  "edges": [
+    {
+      "conds": [],
+      "from": "orch",
+      "fromSide": "r",
+      "id": "task",
+      "kind": "default",
+      "label": "task / fix instructions",
+      "note": "",
+      "to": "worker",
+      "toSide": "l"
+    },
+    {
+      "conds": [],
+      "from": "worker",
+      "fromSide": "l",
+      "id": "result",
+      "kind": "default",
+      "label": "result + handoff doc",
+      "note": "Every finished task comes back for review. A handoff doc is included when the worker is about to be replaced.",
+      "to": "orch",
+      "toSide": "r"
+    },
+    {
+      "conds": [
+        "worker context nearly full",
+        "handoff doc received"
+      ],
+      "from": "orch",
+      "fromSide": "t",
+      "id": "replace",
+      "kind": "conditional",
+      "label": "start fresh worker from handoff",
+      "note": "Replaces the Worker Agent in the same slot; the new worker starts from the handoff doc.",
+      "to": "slot",
+      "toSide": "t"
+    },
+    {
+      "conds": [],
+      "from": "worker",
+      "fromSide": "r",
+      "id": "edits",
+      "kind": "default",
+      "label": "reads + edits",
+      "note": "",
+      "to": "repo",
+      "toSide": "l"
+    },
+    {
+      "conds": [],
+      "from": "orch",
+      "fromSide": "b",
+      "id": "review",
+      "kind": "default",
+      "label": "reads to review",
+      "note": "Read-only: the orchestrator checks the work but never edits.",
+      "to": "repo",
+      "toSide": "b"
+    }
+  ],
+  "name": "user agent + project folder (improved)",
+  "nodes": [
+    {
+      "comments": [],
+      "desc": "Plans the work and hands tasks to the worker. Reviews each result against the project, then accepts it or sends fix instructions. Starts a fresh worker from the handoff doc when the current one runs out of context.",
+      "effort": "high",
+      "h": 140,
+      "id": "orch",
+      "model": "gpt-6-astra",
+      "name": "Orchestrator / Controller",
+      "path": "",
+      "provider": "codex",
+      "rules": [
+        {
+          "if": [
+            "result passes review"
+          ],
+          "then": "accept and assign the next task"
+        },
+        {
+          "if": [
+            "result fails review"
+          ],
+          "then": "send fix instructions to the worker"
+        }
+      ],
+      "tags": [],
+      "type": "agent",
+      "w": 240,
+      "x": 0,
+      "y": 160
+    },
+    {
+      "comments": [],
+      "desc": "One worker slot. Workers rotate through it; each new worker picks up from the last one's handoff doc.",
+      "h": 260,
+      "id": "slot",
+      "name": "Worker Thread",
+      "path": "",
+      "rules": [],
+      "tags": [],
+      "type": "group",
+      "w": 320,
+      "x": 360,
+      "y": 100
+    },
+    {
+      "comments": [],
+      "desc": "Works on the project from the orchestrator's instructions and sends each finished task back for review.",
+      "effort": "high",
+      "h": 150,
+      "id": "worker",
+      "model": "gpt-6-sol",
+      "name": "Worker Agent",
+      "path": "",
+      "provider": "codex",
+      "rules": [
+        {
+          "if": [
+            "context window nearly full",
+            "task finished OR at a safe checkpoint"
+          ],
+          "then": "write a handoff doc and send it to the orchestrator"
+        }
+      ],
+      "tags": [],
+      "type": "agent",
+      "w": 208,
+      "x": 416,
+      "y": 176
+    },
+    {
+      "comments": [],
+      "desc": "",
+      "h": 88,
+      "id": "repo",
+      "name": "my-app",
+      "path": "~/code/my-app",
+      "rules": [],
+      "tags": [],
+      "type": "folder",
+      "w": 200,
+      "x": 800,
+      "y": 208
+    }
+  ],
+  "notes": "Orchestrator–worker loop with worker rotation. Tasks go right, results come back left. When a worker's context runs out it writes a handoff doc, and the orchestrator starts a fresh worker in the same slot from it.",
+  "rules": []
+}

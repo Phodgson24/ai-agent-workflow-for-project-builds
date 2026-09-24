@@ -1,0 +1,320 @@
+{
+  "edges": [
+    {
+      "from": "orch",
+      "fromSide": "r",
+      "id": "task",
+      "kind": "default",
+      "label": "task / fix instructions",
+      "to": "slot",
+      "toSide": "l"
+    },
+    {
+      "from": "slot",
+      "fromSide": "l",
+      "id": "result",
+      "kind": "default",
+      "label": "result + handoff doc",
+      "to": "orch",
+      "toSide": "r"
+    },
+    {
+      "conds": [
+        "worker context nearly full",
+        "handoff doc received"
+      ],
+      "from": "orch",
+      "fromSide": "t",
+      "id": "replace",
+      "kind": "conditional",
+      "label": "start fresh worker from handoff",
+      "to": "slot",
+      "toSide": "t"
+    },
+    {
+      "from": "slot",
+      "fromSide": "r",
+      "id": "edits",
+      "kind": "default",
+      "label": "reads + edits",
+      "to": "repo",
+      "toSide": "l"
+    },
+    {
+      "from": "orch",
+      "fromSide": "b",
+      "id": "review",
+      "kind": "default",
+      "label": "reads to review",
+      "note": "Read-only: the orchestrator checks the work but never edits.",
+      "to": "repo",
+      "toSide": "b"
+    }
+  ],
+  "name": "user agent + project folder (sub-flow)",
+  "nodes": [
+    {
+      "desc": "Plans the work and hands tasks to the worker slot. Reviews each result against the project, then accepts it or sends fix instructions. Starts a fresh worker from the handoff doc when the current one runs out of context.",
+      "effort": "high",
+      "h": 140,
+      "id": "orch",
+      "model": "gpt-6-astra",
+      "name": "Orchestrator / Controller",
+      "provider": "codex",
+      "rules": [
+        {
+          "if": [
+            "result passes review"
+          ],
+          "then": "accept and assign the next task"
+        },
+        {
+          "if": [
+            "result fails review"
+          ],
+          "then": "send fix instructions to the worker"
+        }
+      ],
+      "type": "agent",
+      "w": 240,
+      "x": 0,
+      "y": 160
+    },
+    {
+      "desc": "One worker slot. Open it to see how one worker hands over to the next.",
+      "h": 150,
+      "id": "slot",
+      "name": "Worker Thread",
+      "sub": {
+        "edges": [
+          {
+            "from": "pin:task",
+            "id": "i1",
+            "kind": "default",
+            "label": "",
+            "to": "cw"
+          },
+          {
+            "from": "cw",
+            "fromSide": "t",
+            "id": "i2",
+            "kind": "default",
+            "label": "reads + edits",
+            "to": "pin:edits",
+            "toSide": "b"
+          },
+          {
+            "from": "cw",
+            "id": "i3",
+            "kind": "default",
+            "label": "after each step",
+            "to": "chk"
+          },
+          {
+            "conds": [
+              "task finished"
+            ],
+            "from": "chk",
+            "id": "i4",
+            "kind": "conditional",
+            "label": "no: send result",
+            "to": "pin:result"
+          },
+          {
+            "conds": [
+              "context nearly full"
+            ],
+            "from": "chk",
+            "id": "toho",
+            "kind": "conditional",
+            "label": "yes",
+            "to": "ho"
+          },
+          {
+            "from": "ho",
+            "id": "hodoc",
+            "kind": "default",
+            "label": "handoff doc",
+            "to": "pin:result"
+          },
+          {
+            "from": "pin:replace",
+            "id": "i7",
+            "kind": "default",
+            "label": "",
+            "to": "fw"
+          },
+          {
+            "from": "fw",
+            "fromSide": "t",
+            "id": "i8",
+            "kind": "default",
+            "label": "takes over",
+            "to": "cw",
+            "toSide": "b"
+          }
+        ],
+        "nodes": [
+          {
+            "desc": "Works the task. After each step it checks how much context is left.",
+            "effort": "high",
+            "h": 136,
+            "id": "cw",
+            "model": "gpt-6-sol",
+            "name": "Current worker",
+            "provider": "codex",
+            "type": "agent",
+            "w": 208,
+            "x": 0,
+            "y": 0
+          },
+          {
+            "h": 88,
+            "id": "chk",
+            "name": "Context nearly full?",
+            "type": "decision",
+            "w": 192,
+            "x": 296,
+            "y": 24
+          },
+          {
+            "desc": "The exact steps a worker follows before it is replaced.",
+            "h": 150,
+            "id": "ho",
+            "name": "Handoff procedure",
+            "sub": {
+              "edges": [
+                {
+                  "from": "pin:toho",
+                  "id": "h1",
+                  "kind": "default",
+                  "label": "",
+                  "to": "cp"
+                },
+                {
+                  "conds": [
+                    "task finished OR tests pass"
+                  ],
+                  "from": "cp",
+                  "id": "h2",
+                  "kind": "conditional",
+                  "label": "yes",
+                  "to": "cm"
+                },
+                {
+                  "from": "cm",
+                  "id": "h3",
+                  "kind": "default",
+                  "label": "then",
+                  "to": "hd"
+                },
+                {
+                  "from": "hd",
+                  "id": "h4",
+                  "kind": "default",
+                  "label": "send",
+                  "to": "pin:hodoc"
+                }
+              ],
+              "nodes": [
+                {
+                  "desc": "Task finished, or tests pass on the work so far.",
+                  "h": 88,
+                  "id": "cp",
+                  "name": "At a safe checkpoint?",
+                  "type": "decision",
+                  "w": 200,
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "h": 88,
+                  "id": "cm",
+                  "name": "Commit work in progress",
+                  "tags": [
+                    "git"
+                  ],
+                  "type": "tool",
+                  "w": 200,
+                  "x": 264,
+                  "y": 0
+                },
+                {
+                  "desc": "Done, next, open issues, files touched.",
+                  "h": 88,
+                  "id": "hd",
+                  "name": "Write handoff doc",
+                  "type": "memory",
+                  "w": 200,
+                  "x": 528,
+                  "y": 0
+                }
+              ],
+              "pins": {
+                "hodoc": {
+                  "x": 784,
+                  "y": 0
+                },
+                "toho": {
+                  "x": -296,
+                  "y": 0
+                }
+              }
+            },
+            "type": "group",
+            "w": 260,
+            "x": 584,
+            "y": 176
+          },
+          {
+            "desc": "Starts with an empty context, reads the handoff doc, then carries on as the current worker.",
+            "effort": "high",
+            "h": 136,
+            "id": "fw",
+            "model": "gpt-6-sol",
+            "name": "Fresh worker",
+            "provider": "codex",
+            "type": "agent",
+            "w": 208,
+            "x": 0,
+            "y": 264
+          }
+        ],
+        "pins": {
+          "edits": {
+            "x": 0,
+            "y": -136
+          },
+          "replace": {
+            "x": -304,
+            "y": 296
+          },
+          "result": {
+            "x": 936,
+            "y": 24
+          },
+          "task": {
+            "x": -304,
+            "y": 32
+          }
+        }
+      },
+      "type": "group",
+      "w": 260,
+      "x": 360,
+      "y": 160
+    },
+    {
+      "h": 88,
+      "id": "repo",
+      "name": "my-app",
+      "path": "~/code/my-app",
+      "type": "folder",
+      "w": 200,
+      "x": 760,
+      "y": 192
+    }
+  ],
+  "notes": "Overview stays minimal: the orchestrator talks to the Worker Thread slot, whichever worker is in it. Open Worker Thread for the swap cycle, and Handoff procedure inside it for the exact steps.",
+  "rules": []
+}

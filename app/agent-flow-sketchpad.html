@@ -1,0 +1,2365 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<meta charset="utf-8">
+<title>Agent Flow Sketchpad</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#ECEEE9; --surface:#FFFFFF; --panel:#F6F7F3; --ink:#1A1E1B; --muted:#646B65; --line:#D3D8D0; --dot:#BCC2B9;
+  --accent:#3346C9; --accent-ink:#FFFFFF; --edge:#5A625C; --flag-ink:#FFFFFF;
+  --t-agent:#4453D1; --t-folder:#8A6A2E; --t-tool:#0B857A; --t-decision:#B26C06; --t-memory:#3A8233;
+  --t-human:#C23F66; --t-input:#56697A; --t-output:#2E3A44; --t-note:#C9A21B; --t-group:#7B858E;
+  --r-rose:#C23F66; --r-amber:#B26C06; --r-indigo:#4453D1; --r-teal:#0B857A;
+  --shadow:0 1px 2px rgba(20,30,20,.08),0 6px 18px rgba(20,30,20,.06);
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,"Courier New",monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#131614; --surface:#1D211E; --panel:#181B19; --ink:#E4E8E2; --muted:#98A098; --line:#2F3530; --dot:#323933;
+    --accent:#8E9BFF; --accent-ink:#10131A; --edge:#9AA39B; --flag-ink:#111412;
+    --t-agent:#8390FF; --t-folder:#D6B270; --t-tool:#3CC5B6; --t-decision:#E7A33A; --t-memory:#7BC56E;
+    --t-human:#F07C9C; --t-input:#93A8BA; --t-output:#C4CFD8; --t-note:#E3C24A; --t-group:#8E98A1;
+    --r-rose:#F07C9C; --r-amber:#E7A33A; --r-indigo:#8390FF; --r-teal:#3CC5B6;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#131614; --surface:#1D211E; --panel:#181B19; --ink:#E4E8E2; --muted:#98A098; --line:#2F3530; --dot:#323933;
+  --accent:#8E9BFF; --accent-ink:#10131A; --edge:#9AA39B; --flag-ink:#111412;
+  --t-agent:#8390FF; --t-folder:#D6B270; --t-tool:#3CC5B6; --t-decision:#E7A33A; --t-memory:#7BC56E;
+  --t-human:#F07C9C; --t-input:#93A8BA; --t-output:#C4CFD8; --t-note:#E3C24A; --t-group:#8E98A1;
+  --r-rose:#F07C9C; --r-amber:#E7A33A; --r-indigo:#8390FF; --r-teal:#3CC5B6;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.25);
+}
+
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;overflow:hidden}
+*{box-sizing:border-box}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.app{height:100%;display:grid;grid-template-columns:var(--lw,176px) minmax(0,1fr) var(--rw,330px);grid-template-rows:auto 1fr}
+
+/* header */
+header{grid-column:1/-1;display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 16px;background:var(--panel);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:8px;color:var(--accent);font:600 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+#title{border:1px solid transparent;background:transparent;border-radius:6px;padding:5px 8px;font-weight:600;font-size:15px;min-width:0;width:min(280px,40vw)}
+#title:hover{border-color:var(--line)}
+#title:focus{background:var(--surface);border-color:var(--line)}
+.spacer{flex:1}
+.tb{display:flex;gap:4px;align-items:center}
+.sep{width:1px;height:22px;background:var(--line);margin:0 4px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:5px 10px;font-size:13px;cursor:pointer;line-height:1.3;white-space:nowrap}
+.btn:hover{border-color:color-mix(in oklab,var(--ink) 30%,var(--line))}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.danger{color:var(--r-rose)}
+.btn.warn{background:var(--r-rose);border-color:var(--r-rose);color:var(--flag-ink)}
+.mobile-only{display:none}
+
+/* palette */
+.palette{background:var(--panel);border-right:1px solid var(--line);padding:14px 12px;overflow:auto;min-width:0;display:flex;flex-direction:column;gap:6px}
+.palette h2{font:600 10.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:6px 4px 2px}
+.palette h2:first-child{margin-top:0}
+.items{display:flex;flex-direction:column;gap:4px}
+.item{display:grid;grid-template-columns:16px 1fr;column-gap:9px;align-items:center;text-align:left;border:1px solid transparent;background:transparent;border-radius:7px;padding:6px 8px;cursor:grab;touch-action:none;user-select:none;--tc:var(--t-agent)}
+.item:hover{background:var(--surface);border-color:var(--line)}
+.item b{font-weight:500;font-size:13.5px}
+.item small{grid-column:2;color:var(--muted);font-size:11.5px}
+.palette .tip{margin-top:auto;font-size:11.5px;color:var(--muted);line-height:1.45;padding:8px 4px 0}
+
+/* type glyphs */
+.g{width:12px;height:12px;display:inline-block;background:var(--tc);flex:none;justify-self:center}
+.g-agent{border-radius:2px}
+.g-folder{height:10px;border-radius:1px 2px 2px 2px;clip-path:polygon(0 0,42% 0,52% 22%,100% 22%,100% 100%,0 100%)}
+.g-tool{clip-path:polygon(50% 0,100% 100%,0 100%)}
+.g-decision{transform:rotate(45deg) scale(.82);border-radius:1px}
+.g-memory{height:9px;border-radius:5px/3px;box-shadow:0 3px 0 -1px var(--tc)}
+.g-human{border-radius:50%}
+.g-input{clip-path:polygon(0 0,100% 50%,0 100%)}
+.g-output{border-radius:2px;background:transparent;border:3px solid var(--tc)}
+.g-note{background:color-mix(in oklab,var(--tc) 55%,var(--surface));clip-path:polygon(0 0,100% 0,100% 65%,65% 100%,0 100%)}
+.g-group{background:transparent;border:1.5px dashed var(--tc);border-radius:3px}
+
+/* canvas */
+#vp{position:relative;overflow:hidden;touch-action:none;background-color:var(--bg);background-image:radial-gradient(var(--dot) 1.1px,transparent 1.4px);cursor:default}
+#vp.panning{cursor:grabbing}
+#vp:focus{outline:none}
+#bEx{width:auto;padding:5px 8px}
+#world{position:absolute;left:0;top:0;transform-origin:0 0}
+#edges,#handles{position:absolute;left:-5000px;top:-5000px;width:10000px;height:10000px;overflow:visible;pointer-events:none}
+.eh{fill:var(--surface);stroke:var(--accent);stroke-width:2.5;pointer-events:all;cursor:move}
+.eh:hover{fill:var(--accent)}
+.hit{fill:none;stroke:transparent;stroke-width:16;pointer-events:stroke;cursor:pointer}
+.halo{fill:none;stroke:var(--bg);stroke-width:7;pointer-events:none}
+.e{fill:none;stroke:var(--edge);stroke-width:1.75}
+.e.conditional{stroke:var(--t-decision)}
+.e.fallback{stroke:var(--muted);stroke-dasharray:7 5}
+.e.async{stroke-dasharray:1 5;stroke-linecap:round;stroke-width:2.4}
+.e.sel{stroke:var(--accent);stroke-width:2.6}
+.e.temp{stroke:var(--accent);stroke-dasharray:5 4}
+.a{fill:var(--edge)}
+.a.conditional{fill:var(--t-decision)}
+.a.fallback{fill:var(--muted)}
+.a.sel{fill:var(--accent)}
+.elabel{position:absolute;transform:translate(-50%,-50%);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:3px 7px;font-size:12px;line-height:1.35;width:max-content;max-width:230px;text-align:center;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.06);user-select:none}
+.elabel.conditional{border-color:color-mix(in oklab,var(--t-decision) 55%,var(--line))}
+.elabel.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.elabel b{font-weight:600;display:block}
+.cond{font:500 11px var(--mono);color:var(--t-decision);display:block}
+.cond em{font-style:normal;font-weight:600;opacity:.75}
+
+.node{position:absolute;touch-action:none;user-select:none;--tc:var(--t-agent)}
+.node.sel{outline:2px solid var(--accent);outline-offset:3px}
+.node.drop{outline:2px dashed var(--accent);outline-offset:3px}
+.std{background:color-mix(in oklab,var(--tc) 6%,var(--surface));border:1px solid color-mix(in oklab,var(--tc) 40%,var(--line));border-radius:10px;box-shadow:var(--shadow);cursor:grab}
+.std.t-human{border-radius:22px}
+.std.t-decision{border-width:1.5px;border-style:dashed}
+.nin{position:absolute;inset:0;overflow:hidden;border-radius:inherit;display:flex;flex-direction:column}
+.nh{display:flex;align-items:center;gap:7px;padding:6px 10px;background:color-mix(in oklab,var(--tc) 14%,var(--surface));border-bottom:1px solid color-mix(in oklab,var(--tc) 22%,var(--line))}
+.std.t-human .nh{padding-left:16px}
+.nt{font:600 10px var(--mono);letter-spacing:.09em;text-transform:uppercase;color:var(--tc)}
+.nm{margin-left:auto;font:500 10.5px var(--mono);color:var(--muted);white-space:nowrap}
+.nn{font-weight:600;font-size:13.5px;padding:7px 10px 0;line-height:1.3;overflow-wrap:anywhere}
+.std.t-human .nn,.std.t-human .nd,.std.t-human .ntags{padding-left:16px}
+.nd{font-size:12px;color:var(--muted);padding:2px 10px 0;line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.nmodel{font:500 11px var(--mono);color:var(--tc);padding:3px 10px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nmodel span{color:var(--muted)}
+.npath{font:400 11.5px var(--mono);color:var(--ink);padding:3px 10px 0;overflow-wrap:anywhere}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.mgrid .full{grid-column:1/-1}
+.mgrid label{font:400 11px var(--mono);color:var(--muted);display:flex;flex-direction:column;gap:3px}
+.ntags{display:flex;flex-wrap:wrap;gap:4px;padding:6px 10px 8px;margin-top:auto}
+.tag{font:500 10.5px var(--mono);color:var(--muted);background:color-mix(in oklab,var(--ink) 6%,transparent);border-radius:4px;padding:1px 5px}
+.flags{position:absolute;top:-11px;right:10px;display:flex;gap:4px;z-index:2;pointer-events:none}
+.flag{font:600 10px var(--mono);letter-spacing:.02em;padding:2px 7px;border-radius:99px;background:var(--rc);color:var(--flag-ink);white-space:nowrap}
+
+.note{background:color-mix(in oklab,var(--t-note) 26%,var(--surface));border-radius:3px;box-shadow:var(--shadow);cursor:grab;--tc:var(--t-note)}
+.note .nn{padding:10px 12px 0;font-size:13px}
+.note .nd{color:var(--ink);opacity:.8;-webkit-line-clamp:12;padding:4px 12px 10px;white-space:pre-wrap}
+
+/* Groups are click-through except their title bar and resize corner, so nested groups and empty space stay usable. */
+.group{border:1.5px dashed color-mix(in oklab,var(--t-group) 70%,transparent);background:color-mix(in oklab,var(--t-group) 7%,transparent);border-radius:14px;pointer-events:none;--tc:var(--t-group)}
+.group .rz,.group .port{pointer-events:auto}
+.group:has(.ghead:hover) .port{opacity:1}
+.ghead{position:absolute;left:0;right:0;top:0;height:32px;padding:0 12px;display:flex;gap:8px;align-items:center;border-radius:13px 13px 0 0;pointer-events:auto;cursor:grab;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden}
+.ghead:hover{background:color-mix(in oklab,var(--t-group) 10%,transparent)}
+.ghead b{font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis}
+.ghead .gc{margin-left:auto;font:400 11px var(--mono)}
+.group.sel .rz,.group:has(.ghead:hover) .rz{opacity:.8}
+.group.into{border-color:var(--accent);border-style:solid;background:color-mix(in oklab,var(--accent) 8%,transparent)}
+.crumbs{font-size:12.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.crumbs button{border:0;background:none;padding:0;color:var(--accent);cursor:pointer;font-size:12.5px}
+
+.port{position:absolute;width:12px;height:12px;border-radius:50%;background:var(--surface);border:2px solid var(--accent);opacity:0;cursor:crosshair;z-index:3;transition:opacity .12s}
+.port::after{content:"";position:absolute;inset:-8px}
+.p-t{top:-7px;left:50%;margin-left:-6px}.p-b{bottom:-7px;left:50%;margin-left:-6px}
+.p-l{left:-7px;top:50%;margin-top:-6px}.p-r{right:-7px;top:50%;margin-top:-6px}
+.node:hover .port,.node.sel .port,.connecting .port{opacity:1}
+.port:hover{background:var(--accent)}
+.rz{position:absolute;right:2px;bottom:2px;width:14px;height:14px;cursor:nwse-resize;opacity:0;z-index:3;
+  background:linear-gradient(135deg,transparent 45%,var(--tc) 45%,var(--tc) 55%,transparent 55%,transparent 70%,var(--tc) 70%,var(--tc) 80%,transparent 80%)}
+.rz::after{content:"";position:absolute;inset:-6px}
+.node:hover .rz,.node.sel .rz{opacity:.8}
+
+.hud{position:absolute;display:flex;gap:6px;align-items:center;z-index:5}
+.zoom{right:16px;bottom:16px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:3px;box-shadow:var(--shadow)}
+.zoom .btn{border-color:transparent;padding:4px 9px}
+#zl{font:500 12px var(--mono);min-width:44px;text-align:center;font-variant-numeric:tabular-nums;color:var(--muted)}
+.hints{left:16px;bottom:16px;font:400 11px var(--mono);color:var(--muted);flex-direction:column;align-items:flex-start;gap:4px;max-width:min(60%,420px)}
+.hints ul{display:none;margin:0;padding:8px 10px;list-style:none;background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);line-height:1.7}
+.hints.open ul{display:block}
+.hints .btn{font:500 11.5px var(--mono);padding:3px 9px}
+.empty{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;color:var(--muted);text-align:center;font-size:14px;line-height:1.6}
+
+.ghost{position:fixed;pointer-events:none;z-index:50;transform:translate(-50%,-50%);background:color-mix(in oklab,var(--tc) 12%,var(--surface));border:1.5px solid var(--tc);border-radius:9px;padding:14px 22px;font-weight:600;box-shadow:var(--shadow);opacity:.92}
+
+/* inspector */
+#rightPanel{background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0;min-width:0}
+#insp{overflow:auto;padding:10px 16px 16px;display:flex;flex-direction:column;gap:16px;flex:1;min-height:0}
+.ih{display:flex;align-items:center;gap:8px}
+.ih h3{margin:0;font-size:15px;font-weight:600}
+.ih .kind{font:600 10px var(--mono);letter-spacing:.09em;text-transform:uppercase;color:var(--tc,var(--muted));display:flex;gap:6px;align-items:center}
+.ih .x{margin-left:auto}
+.f{display:flex;flex-direction:column;gap:6px}
+.f > label,.sect{font:600 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.sect{display:flex;align-items:center;gap:8px}
+.sect small{margin-left:auto;font-weight:400;letter-spacing:0;text-transform:none;font-family:var(--sans);font-size:11.5px}
+input:not([type=checkbox]),select,textarea{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:7px 9px;font-size:13px;min-width:0}
+textarea{resize:vertical;min-height:64px;line-height:1.45}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:transparent}
+.row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.readout{font:400 11.5px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.x{border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:17px;line-height:1;padding:2px 5px;border-radius:4px}
+.x:hover{color:var(--r-rose);background:color-mix(in oklab,var(--r-rose) 10%,transparent)}
+.link{border:0;background:transparent;color:var(--accent);cursor:pointer;font-size:12.5px;padding:2px 0;align-self:flex-start}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{display:inline-flex;align-items:center;gap:2px;font:500 12px var(--mono);background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:2px 2px 2px 7px}
+.chip .x{font-size:14px;padding:0 4px}
+
+.rule{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:6px}
+.rule-top{display:flex;align-items:center;gap:6px}
+.rl{font:600 11px var(--mono);color:var(--muted)}
+.rrow{display:grid;grid-template-columns:44px 1fr auto;gap:6px;align-items:center}
+.crow{display:grid;grid-template-columns:44px 1fr 1fr auto;gap:6px;align-items:center}
+.crow .val{grid-column:2/4}
+.kw{font:600 10.5px var(--mono);letter-spacing:.06em;text-align:center;border-radius:4px;padding:3px 0}
+.kw.if{color:var(--t-decision);background:color-mix(in oklab,var(--t-decision) 13%,transparent)}
+.kw.and{color:var(--t-decision)}
+.kw.then{color:var(--accent);background:color-mix(in oklab,var(--accent) 12%,transparent)}
+.rname{font-weight:600}
+.tog{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);white-space:nowrap}
+.count{font:500 11.5px var(--mono);color:var(--muted)}
+.count.hit{color:var(--ink)}
+.sw{width:12px;height:12px;border-radius:50%;background:var(--rc);flex:none}
+.cmt{border-left:2px solid var(--line);padding:2px 0 2px 10px;display:grid;grid-template-columns:1fr auto;gap:2px 6px}
+.cmt p{margin:0;font-size:13px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere}
+.cmt time{font:400 10.5px var(--mono);color:var(--muted);grid-column:1}
+.cmt .x{grid-row:1/3;grid-column:2}
+.help{font-size:12px;color:var(--muted);line-height:1.5;margin:0}
+.keys{font:400 11.5px var(--mono);color:var(--muted);line-height:1.8;margin:0;padding:0;list-style:none}
+.keys kbd{font:inherit;border:1px solid var(--line);border-radius:3px;padding:0 4px;background:var(--surface)}
+
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(10,14,12,.45);display:grid;place-items:center;z-index:60;padding:16px}
+.sheet{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(640px,100%);padding:18px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow)}
+.sheet h3{margin:0;font-size:16px}
+.sheet textarea{min-height:280px;font:12px/1.5 var(--mono)}
+#mMsg,#sMsg{font-size:12.5px;color:var(--muted)}
+.slist{display:flex;flex-direction:column;max-height:min(52vh,420px);overflow:auto;border-top:1px solid var(--line)}
+.srow{display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:center;padding:10px 2px;border-bottom:1px solid var(--line)}
+.srow b{font-weight:600;overflow-wrap:anywhere}
+.srow .meta{grid-column:1;font:400 11.5px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.srow .acts{grid-row:1/3;grid-column:2;display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.srow.cur{background:color-mix(in oklab,var(--accent) 7%,transparent)}
+.pill{font:600 10px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-left:6px}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;z-index:70;box-shadow:var(--shadow)}
+
+/* sub-flows: a group with its own canvas behind it */
+.g-subflow{background:transparent;border:2px solid var(--tc);border-radius:2px;box-shadow:3px 3px 0 -1px var(--surface),3px 3px 0 0 var(--tc)}
+.sub{background:color-mix(in oklab,var(--t-group) 7%,var(--surface));border:1.5px solid color-mix(in oklab,var(--t-group) 60%,var(--line));border-radius:12px;cursor:grab;--tc:var(--t-group);
+  box-shadow:5px 5px 0 -1px var(--bg),5px 5px 0 0 color-mix(in oklab,var(--t-group) 45%,var(--line)),var(--shadow)}
+.sub .nh b{font-weight:600;font-size:13px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sfoot{margin-top:auto;padding:6px 10px 8px;font:500 11px var(--mono);color:var(--muted);display:flex;gap:8px;flex-wrap:wrap}
+.sfoot .open{color:var(--accent)}
+.pv{position:absolute;left:8px;top:36px;width:calc(100% - 16px);height:calc(100% - 44px);opacity:0;pointer-events:none;overflow:visible}
+.pv .pn{stroke-width:1.5}
+.pv text{font-family:var(--sans);font-size:15px;font-weight:600;fill:var(--ink)}
+.pv .pe{fill:none;stroke:var(--edge);stroke-width:1.5}
+.zmode .sub{--rv:clamp(0, calc((var(--w) * var(--z) - 300) / 260), 1)}
+.zmode .sub .pv{opacity:var(--rv)}
+.zmode .sub .sfade{opacity:calc(1 - var(--rv))}
+.pin{background:color-mix(in oklab,var(--accent) 7%,var(--surface));border:1.5px dashed var(--accent);border-radius:28px;cursor:grab;--tc:var(--accent)}
+.pin .nh{background:transparent;border:0;padding:8px 16px 0}
+.pin .nn{padding:2px 16px 0;font-size:13px}
+.nav{left:16px;top:16px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:4px 6px;box-shadow:var(--shadow);font-size:13px;flex-wrap:wrap;max-width:calc(100% - 32px)}
+.nav button{border:0;background:none;color:var(--accent);cursor:pointer;padding:3px 4px;border-radius:4px}
+.nav button:hover{background:color-mix(in oklab,var(--accent) 10%,transparent)}
+.nav b{padding:3px 4px}
+.nav .sepr{color:var(--muted)}
+#subMode,#detail{width:auto;border-color:transparent;padding:4px 6px;font-size:12.5px}
+
+/* spacing pad: a small d-pad above the zoom controls */
+.spacing{right:16px;bottom:64px;flex-direction:column;gap:5px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:7px 8px 8px;box-shadow:var(--shadow)}
+.sp-title{font:600 10px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.pad{display:grid;grid-template-columns:repeat(3,30px);grid-template-rows:repeat(3,30px);gap:2px}
+.pad button{display:grid;place-items:center;padding:0;border:1.5px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer;touch-action:none}
+.pad button:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.pad button:active:not(:disabled){background:color-mix(in oklab,var(--accent) 14%,var(--panel))}
+.pad button:disabled{opacity:.35;cursor:default}
+.pad svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.sp-up{grid-area:1/2;border-radius:9px 9px 4px 4px}
+.sp-down{grid-area:3/2;border-radius:4px 4px 9px 9px}
+.sp-left{grid-area:2/1;border-radius:9px 4px 4px 9px}
+.sp-right{grid-area:2/3;border-radius:4px 9px 9px 4px}
+.sp-mid{grid-area:2/2;border-radius:50%!important;transform:scale(.8)}
+/* corner buttons: smaller and quieter than the arrows, so they read as settings, not directions */
+.pad .sp-corner{border-color:transparent;background:transparent;color:var(--muted);border-radius:6px;transform:scale(.8)}
+.pad .sp-corner:hover{background:var(--panel)}
+.sp-save{grid-area:1/1}
+.sp-fold{grid-area:1/3}
+.sp-save.on{color:var(--accent)}
+.sp-save.on svg{fill:currentColor}
+.sp-open{display:inline-flex;align-items:center;gap:5px;font-size:12.5px}
+.sp-open svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linejoin:round}
+.pad button.nope{animation:nope .32s}
+@keyframes nope{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+@media (prefers-reduced-motion:reduce){.pad button.nope{animation:none;border-color:var(--r-rose)}}
+
+/* readability: compact detail, focus on what's connected, label leaders */
+.cchip{display:none;font:600 10.5px var(--mono);color:var(--t-decision)}
+.compact .std .nd,.compact .std .ntags,.compact .sub .nd{display:none}
+.compact .elabel .cond{display:none}
+.compact .elabel .cchip{display:inline}
+.compact .elabel.sel .cond,.compact .elabel:hover .cond{display:block}
+.compact .elabel.sel .cchip,.compact .elabel:hover .cchip{display:none}
+.elabel:hover,.elabel.sel{z-index:4}
+.e,.a,.elabel,#nodes .node{transition:opacity .12s}
+#world.focus .e:not(.rel):not(.temp),#world.focus .a:not(.rel){opacity:.22}
+#world.focus .elabel:not(.rel){opacity:.3}
+#world.focus #nodes .node:not(.rel){opacity:.45}
+.leader{fill:none;stroke:var(--muted);stroke-width:1;stroke-dasharray:2 3}
+
+/* comment mode: what a click will comment on, the Ctrl-click selection, and the open thread's boxes */
+.cmode #nodes .node,.cmode #groups .ghead,.cmode .elabel,.cmode .hit{cursor:copy}
+.node.csel,.elabel.csel{outline:2px dashed var(--t-decision);outline-offset:4px}
+.node.chl,.elabel.chl{outline:2px solid var(--t-decision);outline-offset:4px}
+path.e.csel,path.e.chl{stroke:var(--t-decision);stroke-width:3}
+.cbar{bottom:72px;left:50%;transform:translateX(-50%);align-items:center;gap:8px;max-width:min(640px,calc(100% - 32px));background:var(--surface);border:1.5px solid var(--t-decision);border-radius:10px;padding:7px 8px 7px 12px;box-shadow:var(--shadow);font-size:13px;z-index:8}
+.cbar #cbarText{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.newer{top:64px;left:50%;transform:translateX(-50%);align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;max-width:calc(100% - 32px);
+  background:var(--surface);border:1.5px solid var(--accent);border-radius:10px;padding:8px 10px 8px 14px;box-shadow:var(--shadow);font-size:13px;z-index:8}
+
+/* side panels: header bar with hide button, drag dividers, and edge tabs to bring a hidden panel back.
+   Each area is pinned to its own column so hiding a panel never shifts the canvas into its place. */
+.palette{grid-column:1;grid-row:2}
+#vp{grid-column:2;grid-row:2}
+#rightPanel{grid-column:3;grid-row:2}
+@media (max-width:820px){.palette{grid-column:1;grid-row:2} #vp{grid-column:1;grid-row:3} #rightPanel{grid-column:1}}
+.panel-bar{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.panel-bar span{font:600 10.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+#rightPanel .panel-bar{padding:12px 12px 0 16px}
+.palette .panel-bar{margin:-2px -4px 2px 4px}
+.hide-btn{border:1px solid transparent;background:transparent;color:var(--muted);border-radius:6px;padding:2px 7px;cursor:pointer;font-size:15px;line-height:1.2}
+.hide-btn:hover{border-color:var(--line);color:var(--ink);background:var(--surface)}
+.splitter{top:0;bottom:0;width:10px;cursor:col-resize;z-index:6;touch-action:none}
+.splitter::after{content:"";position:absolute;top:0;bottom:0;width:2px;background:transparent;transition:background .12s}
+.sp-l{left:0}.sp-l::after{left:0}
+.sp-r{right:0}.sp-r::after{right:0}
+.splitter:hover::after,.splitter.dragging::after,.splitter:focus-visible::after{background:var(--accent)}
+.splitter:focus-visible{outline:none}
+.show-tab{top:50%;transform:translateY(-50%);writing-mode:vertical-rl;padding:12px 5px;border:1px solid var(--line);background:var(--surface);color:var(--muted);font:600 11px var(--mono);letter-spacing:.06em;cursor:pointer;box-shadow:var(--shadow);z-index:6}
+.show-tab:hover{color:var(--accent);border-color:var(--accent)}
+.show-l{left:0;border-left:0;border-radius:0 8px 8px 0}
+.show-r{right:0;border-right:0;border-radius:8px 0 0 8px}
+
+@media (max-width:820px){
+  .app{grid-template-columns:1fr;grid-template-rows:auto auto 1fr}
+  .palette{border-right:0;border-bottom:1px solid var(--line);padding:8px 16px;display:grid;grid-template-columns:repeat(5,1fr);gap:2px}
+  .palette h2,.palette .tip,.item small{display:none}
+  .items{display:contents}
+  .item{grid-template-columns:1fr;justify-items:center;row-gap:4px;padding:6px 2px}
+  .item b{font-size:11.5px}
+  #rightPanel{position:fixed;left:0;right:0;bottom:0;height:58%;z-index:20;border-left:0;border-top:1px solid var(--line);box-shadow:0 -8px 24px rgba(0,0,0,.15);transform:translateY(105%);transition:transform .2s;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+  .insp-open #rightPanel{transform:none}
+  .panel-bar,.splitter,.show-tab{display:none!important}
+  .mobile-only{display:inline-flex}
+  .hints{display:none}
+  #title{width:46vw}
+  .brand span{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="app" id="app">
+  <header>
+    <div class="brand" aria-hidden="true">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="1.5" y="7" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="12.5" y="1.5" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="12.5" y="12.5" width="6" height="6" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M7.5 10h2.5V4.5h2.5M10 10v5.5h2.5" stroke="currentColor" stroke-width="1.6"/></svg>
+      <span>Flow Sketchpad</span>
+    </div>
+    <input id="title" aria-label="Canvas name" spellcheck="false">
+    <div class="spacer"></div>
+    <div class="tb">
+      <button class="btn" id="bUndo" title="Undo (Ctrl+Z)">Undo</button>
+      <button class="btn" id="bRedo" title="Redo (Ctrl+Shift+Z)">Redo</button>
+      <span class="sep"></span>
+      <button class="btn primary" id="bSave" title="Save this setup (Ctrl+S)">Save</button>
+      <button class="btn" id="bSetups" title="Your saved setups">Setups</button>
+      <span class="sep"></span>
+      <button class="btn" id="bRules" title="Canvas-wide IF / AND rules">Canvas rules</button>
+      <button class="btn" id="bJson" title="Copy or paste the canvas as JSON">JSON</button>
+      <select class="btn" id="bEx" aria-label="Load an example"><option value="">Examples…</option><option value="minimal">Agent + project folder</option><option value="triage">Support triage (full)</option></select>
+      <button class="btn" id="bNew">New canvas</button>
+      <button class="btn mobile-only" id="bInsp">Details</button>
+    </div>
+  </header>
+
+  <aside class="palette" id="palette" aria-label="Components">
+    <div class="panel-bar"><span>Components</span><button class="hide-btn" id="hideL" title="Hide this panel" aria-label="Hide components panel">«</button></div>
+    <h2>Build</h2>
+    <div class="items" id="pBuild"></div>
+    <h2>Organise</h2>
+    <div class="items" id="pNote"></div>
+    <p class="tip">Drag onto the canvas, or click to drop in the middle.</p>
+  </aside>
+
+  <main id="vp" aria-label="Canvas" tabindex="-1">
+    <div id="world">
+      <div id="groups"></div>
+      <svg id="edges"><g id="eg" transform="translate(5000 5000)"></g></svg>
+      <div id="elabels"></div>
+      <div id="nodes"></div>
+      <svg id="handles"><g id="hg" transform="translate(5000 5000)"></g></svg>
+    </div>
+    <div class="empty" id="empty" hidden><div>Blank canvas.<br>Drag a component in from the left to start.</div></div>
+    <div class="hud hints" id="hints"><ul><li>Drag empty space to pan · scroll to zoom</li><li>Drag a side dot ● onto another box to link</li><li>Select a link, then drag its end dots to move them</li><li>Double-click empty space to add an agent</li><li>Drag a group by its title bar</li><li>Double-click a sub-flow to open it</li></ul><button class="btn" id="hintsBtn" aria-expanded="false">? Tips</button></div>
+    <div class="hud nav" id="nav" hidden></div>
+    <div class="hud cbar" id="cbar" role="status" hidden>
+      <span id="cbarText"></span>
+      <button class="btn primary" id="cbarGo" title="Open one comment for everything selected (Enter)">Comment on these</button>
+      <button class="btn" id="cbarClear" title="Clear the selection (Esc)">Clear</button>
+    </div>
+    <div class="hud newer" id="newer" role="status" hidden>
+      <span>A newer version of this setup was saved <b id="newerWhen"></b>. You’re looking at an older copy.</span>
+      <button class="btn primary" id="newerLoad">Load latest</button>
+      <button class="btn" id="newerKeep" title="Keep what’s on screen. Saving will replace the newer version.">Keep mine</button>
+    </div>
+    <div class="hud splitter sp-l" id="splitL" role="separator" aria-orientation="vertical" aria-label="Resize components panel" aria-valuemin="140" aria-valuemax="380" tabindex="0" title="Drag to resize · double-click for default size"></div>
+    <div class="hud splitter sp-r" id="splitR" role="separator" aria-orientation="vertical" aria-label="Resize details panel" aria-valuemin="260" aria-valuemax="600" tabindex="0" title="Drag to resize · double-click for default size"></div>
+    <button class="hud show-tab show-l" id="showL" hidden title="Show the components panel">Components ›</button>
+    <button class="hud show-tab show-r" id="showR" hidden title="Show the details panel">‹ Details</button>
+    <div class="hud spacing" id="spacing" role="group" aria-labelledby="spTitle">
+      <span class="sp-title" id="spTitle">Spacing</span>
+      <div class="pad">
+        <button class="sp-corner sp-save" data-sp="savept" id="spSave" title="Save the current layout as this level’s reset point" aria-label="Save as reset point">
+          <svg viewBox="0 0 16 16"><path d="M4.5 2.5h7v11L8 10.8l-3.5 2.7z"/></svg></button>
+        <button class="sp-corner sp-fold" data-sp="fold" title="Hide the spacing pad (a Spacing button stays in the bar below)" aria-label="Collapse spacing pad">
+          <svg viewBox="0 0 16 16"><path d="M4.5 5.5 8 9l3.5-3.5M4 12.5h8"/></svg></button>
+        <button class="sp-up" data-sp="up" title="Taller: more space between rows. One row: spread its links apart (Alt+↑)" aria-label="Taller">
+          <svg viewBox="0 0 16 16"><path d="M8 2.5v11M5 5.5l3-3 3 3M5 10.5l3 3 3-3"/></svg></button>
+        <button class="sp-left" data-sp="left" title="Narrower: less space between columns. One column: bring its links together (Alt+←)" aria-label="Narrower">
+          <svg viewBox="0 0 16 16"><path d="M1.5 8h4.5M3.5 5l3 3-3 3M14.5 8H10M12.5 5l-3 3 3 3M8 3v10"/></svg></button>
+        <button class="sp-mid" data-sp="reset" id="spMid" title="Reset spacing on this level" aria-label="Reset spacing" disabled>
+          <svg viewBox="0 0 16 16"><path d="M3.5 8a4.5 4.5 0 1 0 1.4-3.3"/><path d="M4.6 2v2.9h2.9"/></svg></button>
+        <button class="sp-right" data-sp="right" title="Wider: more space between columns. One column: spread its links apart (Alt+→)" aria-label="Wider">
+          <svg viewBox="0 0 16 16"><path d="M2.5 8h11M5.5 5l-3 3 3 3M10.5 5l3 3-3 3"/></svg></button>
+        <button class="sp-down" data-sp="down" title="Shorter: less space between rows. One row: bring its links together (Alt+↓)" aria-label="Shorter">
+          <svg viewBox="0 0 16 16"><path d="M8 1.5V6M5 3.5l3 3 3-3M8 14.5V10M5 12.5l3-3 3 3M3 8h10"/></svg></button>
+      </div>
+    </div>
+    <div class="hud zoom">
+      <select id="subMode" aria-label="How sub-flows open" title="How sub-flows open">
+        <option value="drill">Sub-flows: click to open</option>
+        <option value="zoom">Sub-flows: zoom to open</option>
+      </select>
+      <select id="detail" aria-label="How much detail boxes and links show" title="How much detail boxes and links show">
+        <option value="full">Detail: full</option>
+        <option value="compact">Detail: compact</option>
+      </select>
+      <span class="sep"></span>
+      <button class="btn sp-open" id="spOpen" title="Show the spacing pad" aria-label="Show spacing pad" hidden>
+        <svg viewBox="0 0 16 16"><path d="M6.5 2h3v4.5H14v3H9.5V14h-3V9.5H2v-3h4.5z"/></svg>Spacing</button>
+      <button class="btn" id="zOut" aria-label="Zoom out">−</button>
+      <span id="zl">100%</span>
+      <button class="btn" id="zIn" aria-label="Zoom in">+</button>
+      <button class="btn" id="zFit">Fit</button>
+    </div>
+  </main>
+
+  <aside id="rightPanel" aria-label="Details">
+    <div class="panel-bar"><span>Details</span><button class="hide-btn" id="hideR" title="Hide this panel" aria-label="Hide details panel">»</button></div>
+    <div id="insp"></div>
+  </aside>
+</div>
+
+<div class="modal" id="sModal" hidden>
+  <div class="sheet" role="dialog" aria-labelledby="sTitle">
+    <div class="ih"><h3 id="sTitle">Saved setups</h3><button class="x" id="sClose" aria-label="Close">×</button></div>
+    <form id="sForm" class="row">
+      <input id="sName" aria-label="Setup name" placeholder="Name this setup" style="flex:1;min-width:180px" autocomplete="off">
+      <button class="btn primary" type="submit">Save as new setup</button>
+    </form>
+    <p class="help" id="sWhere"></p>
+    <div id="sList" class="slist"></div>
+    <span id="sMsg"></span>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<div class="modal" id="modal" hidden>
+  <div class="sheet" role="dialog" aria-labelledby="mTitle">
+    <div class="ih"><h3 id="mTitle">Canvas as JSON</h3><button class="x" id="mClose" aria-label="Close">×</button></div>
+    <p class="help">Copy this to keep or share the canvas (or hand it to an agent to build from). To load a canvas, paste its JSON here and press Load.</p>
+    <textarea id="mText" spellcheck="false"></textarea>
+    <div class="row"><button class="btn" id="mCopy">Copy</button><button class="btn primary" id="mLoad">Load pasted JSON</button><span id="mMsg"></span></div>
+  </div>
+</div>
+
+<script>
+(() => {
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Math.random().toString(36).slice(2, 9);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const snap = v => Math.round(v / 8) * 8;
+const KEY = 'agent-flow-sketchpad-v1';
+
+const TYPES = {
+  input:    {label:'Trigger',  name:'Trigger',      hint:'Where work enters',     w:176, h:80},
+  agent:    {label:'Agent',    name:'New agent',    hint:'Agent + model',         w:208, h:120},
+  tool:     {label:'Tool',     name:'New tool',     hint:'API, function, MCP',    w:184, h:88},
+  decision: {label:'Decision', name:'Decision',     hint:'Router, if / else',     w:184, h:88},
+  memory:   {label:'Memory',   name:'Memory',       hint:'Store, vector DB',      w:184, h:88},
+  folder:   {label:'Folder',   name:'Project folder', hint:'Project or directory', w:200, h:88},
+  human:    {label:'Human',    name:'Human review', hint:'Approval checkpoint',   w:184, h:88},
+  output:   {label:'Output',   name:'Output',       hint:'Result or reply',       w:176, h:80},
+  note:     {label:'Note',     name:'Note',         hint:'Sticky comment',        w:200, h:120},
+  group:    {label:'Group',    name:'Group',        hint:'Frame a sub-team',      w:420, h:260},
+};
+const BUILD = ['input','agent','tool','decision','memory','folder','human','output'];
+// Provider → models → effort levels. Edit this list to add or retire models.
+const EFFORT_LABELS = {low:'Low', medium:'Medium', high:'High', xhigh:'Extra high', max:'Max', default:'Default (not adjustable)'};
+const PROVIDERS = {
+  claude: {label:'Claude', models:[
+    {id:'claude-opus-5-5',  label:'Opus 5.5',  efforts:['low','medium','high','xhigh','max'], def:'high'},
+    {id:'claude-fable-5-1', label:'Fable 5.1', efforts:['low','medium','high','xhigh','max'], def:'high'},
+    {id:'claude-sonnet-5',  label:'Sonnet 5',  efforts:['low','medium','high','xhigh','max'], def:'medium'},
+    {id:'claude-haiku-4-5', label:'Haiku 4.5', efforts:['default'], def:'default'},
+  ]},
+  codex: {label:'Codex', models:[
+    {id:'gpt-6-astra',  label:'Astra',        efforts:['low','medium','high','xhigh','max'], def:'low'},
+    {id:'gpt-6-sol',    label:'GPT-6 Sol',    efforts:['low','medium','high','xhigh','max'], def:'medium'},
+    {id:'gpt-6-luna',   label:'GPT-6 Luna',   efforts:['low','medium','high','xhigh','max'], def:'high'},
+    {id:'gpt-5.6-sol',  label:'GPT-5.6 Sol',  efforts:['low','medium','high','xhigh'], def:'medium'},
+    {id:'gpt-5.6-terra',label:'GPT-5.6 Terra',efforts:['low','medium','high','xhigh'], def:'medium'},
+    {id:'gpt-5.6-luna', label:'GPT-5.6 Luna', efforts:['low','medium','high','xhigh'], def:'high'},
+  ]},
+};
+const findModel = n => PROVIDERS[n.provider]?.models.find(m => m.id === n.model);
+// Keep an agent's provider / model / effort valid, filling defaults where needed.
+function fixAgent(n) {
+  if (n.type !== 'agent') return n;
+  if (!PROVIDERS[n.provider]) n.provider = 'claude';
+  if (!findModel(n)) n.model = PROVIDERS[n.provider].models[0].id;
+  const m = findModel(n);
+  if (!m.efforts.includes(n.effort)) n.effort = m.def;
+  return n;
+}
+const RULE_TYPES = BUILD;
+const SIDES = {'':'Auto', t:'Top', r:'Right', b:'Bottom', l:'Left'};
+const KINDS = {default:'Always', conditional:'Conditional', fallback:'Fallback / on error', async:'Async / background'};
+const COLORS = ['rose','amber','indigo','teal'];
+const FIELDS = {
+  type: {label:'Type',            ops:['is','is not'],              kind:'type'},
+  tag:  {label:'Tag',             ops:['has','lacks'],              kind:'text'},
+  name: {label:'Name',            ops:['contains','not contains'],  kind:'text'},
+  desc: {label:'Instructions',    ops:['contains','not contains'],  kind:'text'},
+  in:   {label:'Incoming links',  ops:['=','>','<'],                kind:'num'},
+  out:  {label:'Outgoing links',  ops:['=','>','<'],                kind:'num'},
+  rules:{label:'Own rule count',  ops:['=','>','<'],                kind:'num'},
+  provider:{label:'Provider',     ops:['is','is not'],              kind:'provider'},
+  group:{label:'Inside group',    ops:['is inside','not inside'],   kind:'text'},
+};
+
+/* ---------- state ---------- */
+let state, sel = {kind:null, id:null}, view = {x:0, y:0, z:1}, drag = null;
+let undo = [], redo = [];
+
+// Smallest useful canvas: one agent working in one project folder.
+function minimalSample() {
+  const base = {desc:'', path:'', tags:[], rules:[], comments:[]};
+  const nodes = [
+    fixAgent({...base, id:'agent', type:'agent', x:0, y:0, w:TYPES.agent.w, h:TYPES.agent.h, name:'Coding agent',
+      provider:'claude', model:'claude-opus-5-5', effort:'high', desc:'Fix the failing tests, then summarise the changes.'}),
+    {...base, id:'repo', type:'folder', x:336, y:16, w:TYPES.folder.w, h:TYPES.folder.h, name:'my-app', path:'~/code/my-app'},
+  ];
+  const edges = [{id:'e1', from:'agent', to:'repo', kind:'default', label:'reads + edits', conds:[], note:''}];
+  return {name:'Example: agent + project folder', notes:'', nodes, edges, rules:[]};
+}
+function sample() {
+  const N = (id,type,x,y,name,desc='',tags=[],rules=[],w,h) => ({id,type,x,y,w:w||TYPES[type].w,h:h||TYPES[type].h,name,desc,tags,rules,comments:[]});
+  const nodes = [
+    N('grp','group',568,8,'Specialist agents','',[],[],480,432),
+    N('pod','group',584,52,'Billing pod','',[],[],456,184),
+    N('in','input',40,200,'Customer ticket','Email, chat or web form',['entry']),
+    N('rt','agent',264,184,'Triage router','Classify intent and urgency. Return {intent, confidence}.',['router'],
+      [{if:['confidence < 0.7'],then:'Escalate to Human review'},{if:['intent = billing','plan = enterprise'],then:'Set priority to high'}]),
+    N('mem','memory',264,392,'Conversation memory','Past tickets for this customer',['vector-db']),
+    N('bill','agent',600,96,'Billing agent','Resolve refunds, invoices and plan changes.',['billing'],[{if:['refund > $500'],then:'Require human approval'}]),
+    N('stripe','tool',840,96,'Stripe lookup','Read-only customer + invoice lookup',['pii','payments']),
+    N('tech','agent',600,280,'Tech support agent','Diagnose issue using the knowledge base.',['support']),
+    N('kb','tool',840,280,'KB search (RAG)','Top-5 chunks from help center',['rag']),
+    N('hum','human',600,480,'Human review','Support lead approves or edits',['hitl']),
+    N('wr','agent',1112,200,'Reply writer','Draft the final reply in brand voice.',['drafting']),
+    N('out','output',1116,400,'Send reply','Post to ticketing system'),
+    N('repo','folder',840,480,'support-bot repo','',['codebase']),
+    N('note1','note',40,360,'Open question','Should the router retry once before escalating to a human?'),
+  ];
+  const cfg = {rt:['claude','claude-sonnet-5','medium'], bill:['claude','claude-opus-5-5','high'], tech:['codex','gpt-6-sol','medium'], wr:['claude','claude-haiku-4-5','default']};
+  for (const n of nodes) { if (cfg[n.id]) [n.provider, n.model, n.effort] = cfg[n.id]; fixAgent(n); }
+  nodes.find(n => n.id === 'repo').path = '~/code/support-bot';
+  const E = (id,from,to,kind='default',label='',conds=[]) => ({id,from,to,kind,label,conds,note:''});
+  const edges = [
+    E('e1','in','rt','default','ticket'),
+    E('e2','rt','bill','conditional','',['intent = billing']),
+    E('e3','rt','tech','conditional','',['intent = technical']),
+    E('e4','rt','hum','fallback','escalate',['confidence < 0.7']),
+    E('e5','mem','rt','async','context'),
+    E('e6','bill','stripe'), E('e7','tech','kb'),
+    E('e8','bill','wr'), E('e9','tech','wr'),
+    E('e10','hum','wr','conditional','',['approved = true']),
+    E('e11','wr','out'),
+    E('e12','tech','repo','default','reads + edits'),
+  ];
+  const rules = [
+    {id:'r1',name:'PII tools need approval',enabled:true,match:'all',conds:[{field:'type',op:'is',value:'tool'},{field:'tag',op:'has',value:'pii'}],then:'Needs approval',color:'rose'},
+    {id:'r2',name:'High fan-out agents',enabled:true,match:'all',conds:[{field:'type',op:'is',value:'agent'},{field:'out',op:'>',value:'2'}],then:'Fan-out > 2',color:'amber'},
+  ];
+  return {name:'Example: support triage', notes:'Sample canvas. Edit it, or press New canvas for a blank one.', nodes, edges, rules};
+}
+
+function normNodes(list) {
+  return (Array.isArray(list) ? list : []).map(n => n && n.type === 'llm' ? {...n, type:'agent'} : n).filter(n => n && TYPES[n.type]).map(n => {
+    const o = fixAgent({
+      id: String(n.id ?? uid()), type: n.type,
+      provider: n.provider, model: n.model, effort: n.effort, path: String(n.path ?? ''),
+      x: +n.x || 0, y: +n.y || 0, w: +n.w || TYPES[n.type].w, h: +n.h || TYPES[n.type].h,
+      name: String(n.name ?? ''), desc: String(n.desc ?? ''),
+      tags: Array.isArray(n.tags) ? n.tags.map(String) : [],
+      rules: Array.isArray(n.rules) ? n.rules.map(r => ({if: Array.isArray(r.if) && r.if.length ? r.if.map(String) : [''], then: String(r.then ?? '')})) : [],
+      comments: Array.isArray(n.comments) ? n.comments.map(c => ({t: +c.t || Date.now(), text: String(c.text ?? '')})) : [],
+    });
+    if (n.type === 'group' && n.sub && typeof n.sub === 'object') o.sub = normSub(n.sub);
+    return o;
+  });
+}
+// Inside a sub-flow, a link end may be "pin:<id of a link on the level above>" (an entry or exit point).
+function normEdges(list, ids, allowPins) {
+  const ok = v => ids.has(v) || (allowPins && typeof v === 'string' && v.startsWith('pin:'));
+  return (Array.isArray(list) ? list : []).filter(e => e && ok(e.from) && ok(e.to)).map(e => ({
+    id: String(e.id ?? uid()), from: e.from, to: e.to, kind: KINDS[e.kind] ? e.kind : 'default',
+    label: String(e.label ?? ''), conds: Array.isArray(e.conds) ? e.conds.map(String) : [], note: String(e.note ?? ''), fromSide: SIDES[e.fromSide] && e.fromSide ? e.fromSide : '', toSide: SIDES[e.toSide] && e.toSide ? e.toSide : '',
+  }));
+}
+function normSub(s) {
+  const nodes = normNodes(s.nodes), pins = {};
+  for (const [k, v] of Object.entries(s.pins && typeof s.pins === 'object' ? s.pins : {}))
+    if (v && isFinite(+v.x) && isFinite(+v.y)) pins[k] = {x:+v.x, y:+v.y};
+  const out = {nodes, edges:normEdges(s.edges, new Set(nodes.map(n => n.id)), true), pins, spread:normSpread(s.spread)};
+  const rp = normResetPoint(s.resetPoint); if (rp) out.resetPoint = rp;
+  return out;
+}
+// A level's saved reset point: box positions/sizes, entry/exit points and link spread.
+function normResetPoint(v) {
+  if (!v || typeof v !== 'object' || !v.nodes || typeof v.nodes !== 'object') return undefined;
+  const num = o => o && ['x', 'y'].every(k => isFinite(+o[k]));
+  const nodes = {}, pins = {};
+  for (const [id, r] of Object.entries(v.nodes)) if (num(r) && isFinite(+r.w) && isFinite(+r.h)) nodes[id] = {x:+r.x, y:+r.y, w:+r.w, h:+r.h};
+  for (const [k, p] of Object.entries(v.pins && typeof v.pins === 'object' ? v.pins : {})) if (num(p)) pins[k] = {x:+p.x, y:+p.y};
+  return {nodes, pins, spread: normSpread(v.spread)};
+}
+const SPREAD_MIN = -3, SPREAD_MAX = 6;
+function normSpread(v) {
+  const o = {x:0, y:0};
+  if (v && typeof v === 'object') for (const k of ['x', 'y']) o[k] = clamp(Math.round(+v[k] || 0), SPREAD_MIN, SPREAD_MAX);
+  return o;
+}
+function normalize(s) {
+  if (!s || !Array.isArray(s.nodes)) throw new Error('JSON needs a "nodes" array.');
+  const out = {name: String(s.name ?? 'Untitled canvas'), notes: String(s.notes ?? ''), setupId: String(s.setupId ?? ''), setupSavedAt: +s.setupSavedAt || 0, spread: normSpread(s.spread)};
+  out.nodes = normNodes(s.nodes);
+  out.edges = normEdges(s.edges, new Set(out.nodes.map(n => n.id)), false);
+  { const rp = normResetPoint(s.resetPoint); if (rp) out.resetPoint = rp; }
+  out.rules = (Array.isArray(s.rules) ? s.rules : []).map(r => ({
+    id: String(r.id ?? uid()), name: String(r.name ?? 'Rule'), enabled: r.enabled !== false, match: r.match === 'any' ? 'any' : 'all',
+    conds: (Array.isArray(r.conds) ? r.conds : []).filter(c => FIELDS[c.field]).map(c => ({field:c.field, op: FIELDS[c.field].ops.includes(c.op) ? c.op : FIELDS[c.field].ops[0], value: String(c.value ?? '')})),
+    then: String(r.then ?? ''), color: COLORS.includes(r.color) ? r.color : 'amber',
+  }));
+  return out;
+}
+
+// If the last canvas can't be opened, park a copy under RESCUE_KEY before anything can overwrite it;
+// the Setups window then offers it back.
+const RESCUE_KEY = KEY + '-rescue';
+let loadFailed = false;
+try {
+  const raw = localStorage.getItem(KEY);
+  try { state = raw ? normalize(JSON.parse(raw)) : sample(); }
+  catch { state = sample(); loadFailed = true; try { localStorage.setItem(RESCUE_KEY, raw); } catch {} }
+} catch { state = sample(); }
+const readRescue = () => { try { return localStorage.getItem(RESCUE_KEY); } catch { return null; } };
+
+let saveT;
+function save() {
+  clearTimeout(saveT);
+  saveT = setTimeout(() => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {} }, 250);
+  updateUndoBtns();
+}
+function checkpoint() {
+  const s = JSON.stringify(state);
+  if (undo[undo.length - 1] === s) return;
+  undo.push(s); if (undo.length > 150) undo.shift(); redo = []; updateUndoBtns();
+}
+function restore(from, to) {
+  if (!from.length) return;
+  to.push(JSON.stringify(state)); state = JSON.parse(from.pop());
+  resolvePath();
+  if (sel.kind === 'node' && !getNode(sel.id) || sel.kind === 'edge' && !getEdge(sel.id)) sel = {kind:null, id:null};
+  renderAll(); save();
+}
+function updateUndoBtns() { $('#bUndo').disabled = !undo.length; $('#bRedo').disabled = !redo.length; }
+
+/* ---------- levels ----------
+   `path` lists the sub-flow groups from the overview down to the level on screen; `C` is that
+   level's canvas ({nodes, edges}: `state` itself, or a group's `.sub`). Canvas rules, name and
+   notes always live on `state`. */
+let path = [], C = state, curGroup = null, parentC = null;
+const views = {};   // camera per level, so going back up returns you where you were
+// How sub-flows open: 'drill' (double-click / button) or 'zoom' (also zoom in to open, out to leave).
+// A per-viewer preference, so it lives in browser storage.
+const MODE_KEY = KEY + '-submode';
+let subMode = (() => { try { return localStorage.getItem(MODE_KEY) === 'zoom' ? 'zoom' : 'drill'; } catch { return 'drill'; } })();
+// Detail level: 'full' shows everything on the canvas; 'compact' hides box descriptions and tags
+// and folds link conditions into an "IF ×n" chip (all still shown on hover, selection and in Details).
+const DETAIL_KEY = KEY + '-detail';
+let detail = (() => { try { return localStorage.getItem(DETAIL_KEY) === 'compact' ? 'compact' : 'full'; } catch { return 'full'; } })();
+function resolvePath() {
+  C = state; curGroup = null; parentC = null;
+  const ok = [];
+  for (const id of path) {
+    const g = C.nodes.find(n => n.id === id && n.sub);
+    if (!g) break;
+    ok.push(id); parentC = C; curGroup = g; C = g.sub;
+  }
+  path = ok;
+}
+// Entry / exit points: one per link that touches this sub-flow's box on the level above.
+// Their positions are stored on the sub-flow (sub.pins[linkId]) so you can move them.
+function pinNodes() {
+  if (!curGroup) return [];
+  const links = parentC.edges.filter(e => (e.to === curGroup.id || e.from === curGroup.id) && e.from !== e.to);
+  if (!links.length) return [];
+  const ns = C.nodes, x0 = ns.length ? Math.min(...ns.map(n => n.x)) : 0, y0 = ns.length ? Math.min(...ns.map(n => n.y)) : 0;
+  const x1 = ns.length ? Math.max(...ns.map(n => n.x + n.w)) : 400;
+  const byId = Object.fromEntries(parentC.nodes.map(n => [n.id, n]));
+  let ni = 0, no = 0;
+  return links.map(e => {
+    const dir = e.to === curGroup.id ? 'in' : 'out', i = dir === 'in' ? ni++ : no++;
+    const pos = C.pins[e.id] ??= {x: dir === 'in' ? snap(x0 - 280) : snap(x1 + 80), y: snap(y0 + i * 88)};
+    const other = byId[dir === 'in' ? e.from : e.to];
+    return {id:'pin:' + e.id, type:'pin', dir, link:e, w:208, h:60, other: other?.name || 'outside',
+      name: e.label || (dir === 'in' ? 'Input' : 'Output'), desc:'', tags:[], rules:[], comments:[],
+      get x() { return pos.x; }, set x(v) { pos.x = v; }, get y() { return pos.y; }, set y(v) { pos.y = v; }};
+  });
+}
+const viewNodes = () => [...C.nodes, ...pinNodes()];
+const isPin = id => typeof id === 'string' && id.startsWith('pin:');
+const getNode = id => C.nodes.find(n => n.id === id) || (isPin(id) ? pinNodes().find(p => p.id === id) : undefined);
+const getEdge = id => C.edges.find(e => e.id === id);
+const countAll = nodes => nodes.reduce((t, n) => t + 1 + (n.sub ? countAll(n.sub.nodes) : 0), 0);
+const getPath = (o, p) => p === '' ? o : p.split('.').reduce((a, k) => a?.[k], o);
+function setPath(o, p, v) { const k = p.split('.'); const last = k.pop(); getPath(o, k.join('.'))[last] = v; }
+
+/* ---------- rules engine ---------- */
+function degrees() {
+  const d = {in:{}, out:{}};
+  for (const e of C.edges) { d.out[e.from] = (d.out[e.from] || 0) + 1; d.in[e.to] = (d.in[e.to] || 0) + 1; }
+  return d;
+}
+// `outer` = names of the sub-flows this box sits inside (so "Inside group" also matches sub-flows).
+function testCond(c, n, deg, outer = []) {
+  const val = String(c.value ?? '').trim().toLowerCase();
+  const num = {in: deg.in[n.id] || 0, out: deg.out[n.id] || 0, rules: n.rules.length};
+  switch (c.field) {
+    case 'type': return (n.type === val) === (c.op === 'is');
+    case 'provider': return (n.type === 'agent' && n.provider === val) === (c.op === 'is');
+    case 'tag': { const has = n.tags.some(t => t.toLowerCase() === val.replace(/^#/, '')); return c.op === 'has' ? has : !has; }
+    case 'group': { const names = [...outer, ...ancestors(n).map(g => g.name)].map(x => x.toLowerCase()); const has = val ? names.some(x => x.includes(val)) : names.length > 0; return c.op === 'is inside' ? has : !has; }
+    case 'name': case 'desc': { if (!val) return c.op !== 'contains'; const has = String(n[c.field]).toLowerCase().includes(val); return c.op === 'contains' ? has : !has; }
+    default: { const v = num[c.field], t = Number(val); if (val === '' || isNaN(t)) return false;
+      return c.op === '=' ? v === t : c.op === '>' ? v > t : v < t; }
+  }
+}
+function ruleMatches(r, n, deg, outer) {
+  if (r.enabled === false || !r.conds.length || n.type === 'note' || n.type === 'group') return false;
+  return r.match === 'any' ? r.conds.some(c => testCond(c, n, deg, outer)) : r.conds.every(c => testCond(c, n, deg, outer));
+}
+/* ---------- nesting (derived from geometry, never stored) ---------- */
+// A box belongs to the smallest frame, larger than itself, that contains its centre.
+// Sub-flow groups are boxes, not frames: what they contain lives on their own canvas.
+const area = n => n.w * n.h;
+const isFrame = n => n.type === 'group' && !n.sub;
+function parentOf(n) {
+  const cx = n.x + n.w/2, cy = n.y + n.h/2; let best = null;
+  for (const g of C.nodes)
+    if (isFrame(g) && g !== n && area(g) > area(n) && cx >= g.x && cx <= g.x + g.w && cy >= g.y && cy <= g.y + g.h && (!best || area(g) < area(best))) best = g;
+  return best;
+}
+function ancestors(n) { const out = []; for (let p = parentOf(n); p && !out.includes(p); p = parentOf(p)) out.unshift(p); return out; }
+function children(g) { return C.nodes.filter(n => parentOf(n) === g); }
+function descendants(g, acc = new Set()) {
+  for (const c of children(g)) if (!acc.has(c)) { acc.add(c); if (isFrame(c)) descendants(c, acc); }
+  return [...acc];
+}
+// Canvas rules run on every level. Returns flags for boxes on screen, per-rule totals across all
+// levels, and for each sub-flow box on screen how many boxes inside it are flagged.
+function computeFlags() {
+  const flags = {}, inside = {}, counts = state.rules.map(() => 0), shown = C;
+  const walk = (canvas, outer) => {
+    const saved = C; C = canvas; let total = 0;
+    try {
+      const deg = degrees();
+      for (const n of canvas.nodes) {
+        let hit = false;
+        state.rules.forEach((r, i) => {
+          if (!ruleMatches(r, n, deg, outer)) return;
+          counts[i]++; hit = true;
+          if (canvas === shown) (flags[n.id] ??= []).push(r);
+        });
+        if (hit) total++;
+        if (n.sub) { const t = walk(n.sub, [...outer, n.name]); total += t; if (canvas === shown) inside[n.id] = t; }
+      }
+    } finally { C = saved; }
+    return total;
+  };
+  walk(state, []);
+  return {flags, counts, inside};
+}
+
+/* ---------- canvas render ---------- */
+const vp = $('#vp'), world = $('#world');
+function applyView() {
+  world.style.transform = `translate(${view.x}px,${view.y}px) scale(${view.z})`;
+  world.style.setProperty('--z', view.z);   // drives the zoom-to-reveal fade on sub-flow boxes
+  if (typeof schedulePins === 'function') schedulePins();   // comment pins follow the canvas
+  const g = 24 * view.z;
+  vp.style.backgroundSize = `${g}px ${g}px`;
+  vp.style.backgroundPosition = `${view.x}px ${view.y}px`;
+  $('#zl').textContent = Math.round(view.z * 100) + '%';
+}
+
+// Bounding box of a canvas's boxes (plus padding) — shared by the preview and the zoom hand-off,
+// so the miniature and the opened sub-flow line up exactly.
+function contentBox(c) {
+  const ns = c.nodes; if (!ns.length) return {x:0, y:0, w:400, h:240};
+  const x0 = Math.min(...ns.map(n => n.x)), y0 = Math.min(...ns.map(n => n.y));
+  const x1 = Math.max(...ns.map(n => n.x + n.w)), y1 = Math.max(...ns.map(n => n.y + n.h));
+  return {x:x0 - 24, y:y0 - 24, w:x1 - x0 + 48, h:y1 - y0 + 48};
+}
+// The area of a sub-flow box the preview fills (matches .pv in CSS).
+const previewRect = g => ({x:g.x + 8, y:g.y + 36, w:g.w - 16, h:g.h - 44});
+function miniSVG(sub) {
+  const b = contentBox(sub), byId = Object.fromEntries(sub.nodes.map(n => [n.id, n]));
+  let s = '';
+  for (const e of sub.edges) {
+    const a = byId[e.from], c = byId[e.to]; if (!a || !c) continue;
+    const p = portPt(a, e.fromSide || sideFor(a, c)), q = portPt(c, e.toSide || sideFor(c, a));
+    s += `<path class="pe" d="M${p.x} ${p.y} L${q.x} ${q.y}"/>`;
+  }
+  for (const n of sub.nodes) {
+    const t = n.type === 'group' ? 'group' : n.type;
+    const style = `stroke:var(--t-${t});fill:${isFrame(n) ? 'none' : `color-mix(in oklab,var(--t-${t}) 12%,var(--surface))`}${isFrame(n) ? ';stroke-dasharray:8 6' : ''}`;
+    s += `<rect class="pn" x="${n.x}" y="${n.y}" width="${n.w}" height="${n.h}" rx="10" style="${style}"/>`;
+    if (n.type !== 'note') s += `<text x="${n.x + 12}" y="${n.y + 24}">${esc((n.name || '').slice(0, 28))}</text>`;
+  }
+  return `<svg class="pv" viewBox="${b.x} ${b.y} ${b.w} ${b.h}" preserveAspectRatio="xMidYMid meet" aria-hidden="true">${s}</svg>`;
+}
+function nodeHTML(n, fl, insideCount) {
+  const T = TYPES[n.type] || {label:''}, s = sel.kind === 'node' && sel.id === n.id ? ' sel' : '', drop = (drag?.mode === 'connect' || drag?.mode === 'reattach') && drag.over === n.id ? ' drop' : '';
+  const style = `left:${n.x}px;top:${n.y}px;width:${n.w}px;height:${n.h}px;--tc:var(--t-${n.type})`;
+  const ports = ['t','r','b','l'].map(p => `<i class="port p-${p}" data-port="${p}"></i>`).join('');
+  if (n.type === 'pin')
+    return `<div class="node pin${s}${drop}" data-id="${esc(n.id)}" style="left:${n.x}px;top:${n.y}px;width:${n.w}px;height:${n.h}px"><div class="nin">
+      <div class="nh"><span class="nt">${n.dir === 'in' ? 'In from' : 'Out to'} ${esc(n.other)}</span></div><div class="nn">${esc(n.name)}</div></div>${ports}</div>`;
+  if (n.sub) {
+    const steps = n.sub.nodes.length;
+    const flag = insideCount ? `<div class="flags"><span class="flag" style="--rc:var(--r-amber)">${insideCount} flagged inside</span></div>` : '';
+    return `<div class="node sub${s}${drop}" data-id="${n.id}" style="${style};--tc:var(--t-group);--w:${n.w}"><div class="nin">
+      <div class="nh"><i class="g g-subflow"></i><b>${esc(n.name || 'Sub-flow')}</b><span class="nm">${steps} step${steps === 1 ? '' : 's'}</span></div>
+      ${n.desc ? `<div class="nd sfade">${esc(n.desc)}</div>` : ''}
+      <div class="sfoot sfade"><span class="open">▸ ${subMode === 'zoom' ? 'Zoom in or double-click' : 'Double-click'} to open</span></div>
+      ${subMode === 'zoom' ? miniSVG(n.sub) : ''}</div>${flag}${ports}<i class="rz"></i></div>`;
+  }
+  if (n.type === 'group') {
+    const into = drag?.mode === 'move' && drag.moved && drag.into === n.id ? ' into' : '', c = children(n).length;
+    return `<div class="node group${s}${into}${drop}" data-id="${n.id}" style="${style}"><div class="ghead"><span class="nt">Group</span><b>${esc(n.name)}</b><span class="gc">${c} item${c === 1 ? '' : 's'}</span></div>${ports}<i class="rz"></i></div>`;
+  }
+  if (n.type === 'note')
+    return `<div class="node note${s}${drop}" data-id="${n.id}" style="${style}"><div class="nin"><div class="nn">${esc(n.name)}</div><div class="nd">${esc(n.desc)}</div></div>${ports}<i class="rz"></i></div>`;
+  const meta = [n.rules.length ? `${n.rules.length} rule${n.rules.length > 1 ? 's' : ''}` : '', n.comments.length ? `${n.comments.length} cmt` : ''].filter(Boolean).join(' · ');
+  const tags = n.tags.length ? `<div class="ntags">${n.tags.map(t => `<span class="tag">#${esc(t)}</span>`).join('')}</div>` : '';
+  const flags = fl?.length ? `<div class="flags">${fl.map(r => `<span class="flag" style="--rc:var(--r-${r.color})">${esc(r.then || r.name)}</span>`).join('')}</div>` : '';
+  return `<div class="node std t-${n.type}${s}${drop}" data-id="${n.id}" style="${style}"><div class="nin">
+    <div class="nh"><i class="g g-${n.type}"></i><span class="nt">${T.label}</span><span class="nm">${meta}</span></div>
+    <div class="nn">${esc(n.name || 'Untitled')}</div>${modelLine(n)}${n.type === 'folder' && n.path ? `<div class="npath">${esc(n.path)}</div>` : ''}${n.desc ? `<div class="nd">${esc(n.desc)}</div>` : ''}${tags}</div>${flags}${ports}<i class="rz"></i></div>`;
+}
+
+function modelLine(n) {
+  if (n.type !== 'agent') return '';
+  const m = findModel(n), eff = n.effort === 'default' ? '' : ` <span>·</span> ${EFFORT_LABELS[n.effort].toLowerCase()}`;
+  return `<div class="nmodel">${PROVIDERS[n.provider].label} <span>·</span> ${esc(m.label)}${eff}</div>`;
+}
+function portPt(n, side) {
+  switch (side) {
+    case 't': return {x:n.x + n.w/2, y:n.y, nx:0, ny:-1};
+    case 'b': return {x:n.x + n.w/2, y:n.y + n.h, nx:0, ny:1};
+    case 'l': return {x:n.x, y:n.y + n.h/2, nx:-1, ny:0};
+    default:  return {x:n.x + n.w, y:n.y + n.h/2, nx:1, ny:0};
+  }
+}
+function sideFor(a, b) {
+  const dx = (b.x + b.w/2) - (a.x + a.w/2), dy = (b.y + b.h/2) - (a.y + a.h/2);
+  if (Math.abs(dx) / (a.w + b.w) >= Math.abs(dy) / (a.h + b.h)) return dx >= 0 ? 'r' : 'l';
+  return dy >= 0 ? 'b' : 't';
+}
+function nearestSide(n, pt) {
+  const d = {t:Math.abs(pt.y - n.y), b:Math.abs(pt.y - n.y - n.h), l:Math.abs(pt.x - n.x), r:Math.abs(pt.x - n.x - n.w)};
+  return Object.keys(d).reduce((a, k) => d[k] < d[a] ? k : a);
+}
+// Side a dropped link attaches to: the port under the pointer if there is one, else the side nearest the pointer.
+function dropSide(target, ev, w) {
+  const el = document.elementFromPoint(ev.clientX, ev.clientY);
+  return el?.dataset?.port && el.closest('.node')?.dataset.id === target.id ? el.dataset.port : nearestSide(target, w);
+}
+// Where each link end sits. A pinned side (fromSide / toSide) wins, otherwise the side facing the other box.
+// Several links on one side are spread evenly along it, ordered by where their other end is, so they don't cross.
+function layoutEnds(byId, routes = {}) {
+  const buckets = {}, out = {};
+  for (const e of C.edges) {
+    const a = byId[e.from], b = byId[e.to]; if (!a || !b) continue;
+    const r = routes[e.id];
+    const sa = e.fromSide || r?.fromSide || sideFor(a, b), sb = e.toSide || r?.toSide || sideFor(b, a);
+    (buckets[a.id + sa] ??= []).push({key:e.id + ':from', n:a, side:sa, other:b, oside:sb});
+    (buckets[b.id + sb] ??= []).push({key:e.id + ':to', n:b, side:sb, other:a, oside:sa});
+  }
+  const sp = linkSpread();
+  for (const list of Object.values(buckets)) {
+    const {n, side} = list[0], horiz = side === 't' || side === 'b', mid = portPt(n, side);
+    // Order the ends along the side by the direction each link arrives from: where it leaves the other
+    // box, pushed out along that side's normal (the way the curve actually starts). Sorting by the other
+    // box's centre instead can cross two links that come in from the same box side.
+    for (const it of list) {
+      const o = portPt(it.other, it.oside), ax = o.x + o.nx * 60 - mid.x, ay = o.y + o.ny * 60 - mid.y, len = Math.hypot(ax, ay) || 1;
+      it.key2 = horiz ? ax / len : ay / len;
+    }
+    list.sort((p, q) => p.key2 - q.key2);
+    // Points share the middle part of the side. The level's link spread widens that share (points
+    // move apart, towards the corners) or narrows it (points gather towards the middle).
+    const m = list.length, span = m < 2 ? 0 : clamp((m - 1) / (m + 1) + .1 * (horiz ? sp.x : sp.y), .1, .9);
+    list.forEach((it, i) => {
+      const f = m < 2 ? .5 : .5 + (i / (m - 1) - .5) * span, pt = portPt(n, side);
+      if (horiz) pt.x = n.x + n.w * f; else pt.y = n.y + n.h * f;
+      pt.off = horiz ? pt.x - (n.x + n.w / 2) : pt.y - (n.y + n.h / 2);   // distance from the side's middle
+      out[it.key] = pt;
+    });
+  }
+  return out;
+}
+// Per-level link spread, set by the Spacing pad when a level is a single row (y) or column (x).
+const linkSpread = () => ({x: C.spread?.x || 0, y: C.spread?.y || 0});
+/* ---------- link routing: avoid crossings ----------
+   For every link, try a few routes and keep the one that crosses the fewest other links, then passes
+   through the fewest boxes, then is shortest and straightest:
+   - ends: the side facing the other box plus its two neighbours (a side you pinned is always kept);
+   - bend: straight, or bowed a little, more or a lot to either side.
+   A few greedy passes settle it. Results are cached until boxes or links change, and while you drag a
+   box the last routes are reused (sides re-picked only after you let go). Some diagrams can't be
+   drawn without any crossing at all; the remaining crossings get a small gap (see .halo). */
+const BENDS = [0, 45, -45, 100, -100, 170, -170];
+const NEIGHBOUR_SIDES = {t:['t','l','r'], b:['b','l','r'], l:['l','t','b'], r:['r','t','b']};
+let routeCache = {key:'', routes:{}};
+function curvePoints(p, q, bend, n = 14) {
+  const g = geom(p, q, bend), P = g.pts.split(',').map(Number), out = [];
+  for (let i = 0; i <= n; i++) {
+    const t = i / n, u = 1 - t;
+    out.push({x: u*u*u*P[0] + 3*u*u*t*P[2] + 3*u*t*t*P[4] + t*t*t*P[6], y: u*u*u*P[1] + 3*u*u*t*P[3] + 3*u*t*t*P[5] + t*t*t*P[7]});
+  }
+  return out;
+}
+function segsCross(a, b, c, d) {
+  const o = (p, q, r) => Math.sign((q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x));
+  return o(a, b, c) * o(a, b, d) < 0 && o(c, d, a) * o(c, d, b) < 0;
+}
+// Crossings between two sampled curves, ignoring the stretch near an end they share (links meeting at
+// the same box are supposed to touch there).
+function crossings(A, B, shared) {
+  let k = 0;
+  const near = pt => shared.some(s => Math.hypot(pt.x - s.x, pt.y - s.y) < 26);
+  for (let i = 0; i < A.length - 1; i++) for (let j = 0; j < B.length - 1; j++)
+    if (segsCross(A[i], A[i + 1], B[j], B[j + 1]) && !near(A[i])) k++;
+  return k;
+}
+function boxHits(pts, boxes, skip) {
+  let k = 0;
+  for (const b of boxes) {
+    if (skip.includes(b.id)) continue;
+    if (pts.slice(1, -1).some(p => p.x > b.x - 6 && p.x < b.x + b.w + 6 && p.y > b.y - 6 && p.y < b.y + b.h + 6)) k++;
+  }
+  return k;
+}
+function computeRoutes(byId) {
+  const key = JSON.stringify([levelTag(), Object.values(byId).map(n => [n.id, n.x, n.y, n.w, n.h]), C.edges.map(e => [e.id, e.from, e.to, e.fromSide, e.toSide]), linkSpread()]);
+  if (key === routeCache.key) return routeCache.routes;
+  try { if (localStorage.getItem(KEY + '-routing') === 'off') return {}; } catch {}   // comparison switch (not in the UI)
+  // While a box is being dragged, keep the last routes (cheap and steady); re-route when it's dropped.
+  if (drag?.moved && routeCache.key) return routeCache.routes;
+  const edges = C.edges.filter(e => byId[e.from] && byId[e.to] && e.from !== e.to);
+  const boxes = Object.values(byId).filter(n => !isFrame(n));
+  const cands = {}, alone = {}, plain = {};
+  for (const e of edges) {
+    const a = byId[e.from], b = byId[e.to];
+    const fs = e.fromSide ? [e.fromSide] : NEIGHBOUR_SIDES[sideFor(a, b)];
+    const ts = e.toSide ? [e.toSide] : NEIGHBOUR_SIDES[sideFor(b, a)];
+    const list = [];
+    for (const f of fs) for (const t of ts) for (const bend of BENDS) {
+      // Evaluate from the middle of each side (the final drawing spreads shared sides apart).
+      const P = curvePoints(portPt(a, f), portPt(b, t), bend);
+      list.push({fromSide:f, toSide:t, bend, P, base: boxHits(P, boxes, [a.id, b.id]) * 150 + polyLen(P) * .02 + Math.abs(bend) * .04 + (f === fs[0] ? 0 : 3) + (t === ts[0] ? 0 : 3)});
+    }
+    cands[e.id] = list;
+    alone[e.id] = list.reduce((m, c) => c.base < m.base ? c : m);                 // best on its own
+    plain[e.id] = list.find(c => c.fromSide === fs[0] && c.toSide === ts[0] && !c.bend);   // the old default
+  }
+  const shared = (e, o, c) => {
+    const s = [];
+    if (o.from === e.from || o.to === e.from) s.push(portPt(byId[e.from], c.fromSide));
+    if (o.from === e.to || o.to === e.to) s.push(portPt(byId[e.to], c.toSide));
+    return s;
+  };
+  // Greedy improvement: each link in turn takes the route that's cheapest given everyone else's.
+  const improve = start => {
+    const cur = {...start};
+    for (let pass = 0; pass < 8; pass++) {
+      let changed = false;
+      for (const e of edges) {
+        let best = cur[e.id], bestCost = Infinity;
+        for (const c of cands[e.id]) {
+          let cost = c.base;
+          for (const o of edges) {
+            if (o === e) continue;
+            cost += crossings(c.P, cur[o.id].P, shared(e, o, c)) * 100;
+            if (cost >= bestCost) break;
+          }
+          if (cost < bestCost) { bestCost = cost; best = c; }
+        }
+        if (best !== cur[e.id]) { cur[e.id] = best; changed = true; }
+      }
+      if (!changed) break;
+    }
+    let total = 0;
+    edges.forEach((e, i) => { total += cur[e.id].base; for (const o of edges.slice(i + 1)) total += crossings(cur[e.id].P, cur[o.id].P, shared(e, o, cur[e.id])) * 100; });
+    return {cur, total};
+  };
+  // Two different starting points reach different local best answers; keep the better one.
+  const A = improve(alone), B = improve(plain), cur = A.total <= B.total ? A.cur : B.cur;
+  const routes = {};
+  for (const e of edges) routes[e.id] = {fromSide:cur[e.id].fromSide, toSide:cur[e.id].toSide, bend:cur[e.id].bend};
+  // Stage 2: the sides are settled, so place the ends exactly as they'll be drawn (spread along shared
+  // sides) and re-pick each link's bend against those real curves. Here every crossing counts, except
+  // at a point two links genuinely share (a side with only one end on it).
+  const ends = layoutEnds(byId, routes);
+  const real = (e, bend) => curvePoints(ends[e.id + ':from'], ends[e.id + ':to'], bend, 20);
+  const P2 = {};
+  for (const e of edges) P2[e.id] = real(e, routes[e.id].bend);
+  const sharedPts = (A1, B1) => [A1[0], A1[A1.length - 1]].filter(p => [B1[0], B1[B1.length - 1]].some(q => Math.hypot(p.x - q.x, p.y - q.y) < 3));
+  for (let pass = 0; pass < 6; pass++) {
+    let changed = false;
+    for (const e of edges) {
+      const a = byId[e.from], b = byId[e.to];
+      let best = routes[e.id].bend, bestCost = Infinity, bestP = P2[e.id];
+      for (const bend of BENDS) {
+        const P = bend === routes[e.id].bend ? P2[e.id] : real(e, bend);
+        let cost = boxHits(P, boxes, [a.id, b.id]) * 150 + Math.abs(bend) * .04;
+        for (const o of edges) {
+          if (o === e) continue;
+          cost += crossings(P, P2[o.id], sharedPts(P, P2[o.id])) * 100;
+          if (cost >= bestCost) break;
+        }
+        if (cost < bestCost) { bestCost = cost; best = bend; bestP = P; }
+      }
+      if (best !== routes[e.id].bend) { routes[e.id].bend = best; P2[e.id] = bestP; changed = true; }
+    }
+    if (!changed) break;
+  }
+  routeCache = {key, routes};
+  return routes;
+}
+const polyLen = P => P.reduce((s, p, i) => i ? s + Math.hypot(p.x - P[i - 1].x, p.y - P[i - 1].y) : 0, 0);
+function geom(p, q, bend = 0) {
+  const sp = linkSpread();
+  let k = clamp(Math.hypot(q.x - p.x, q.y - p.y) * .4, 30, 160);
+  // Arcs (both ends facing the same way, e.g. top to top) rise higher or flatten with the spread.
+  if (p.ny && p.ny === q.ny) k = Math.max(12, k * (1 + .15 * sp.y));
+  if (p.nx && p.nx === q.nx) k = Math.max(12, k * (1 + .15 * sp.x));
+  const bx = q.x + q.nx * 9, by = q.y + q.ny * 9;
+  let c1x = p.x + p.nx * k, c1y = p.y + p.ny * k, c2x = bx + q.nx * k, c2y = by + q.ny * k;
+  // Fan: side-by-side links bow apart in the middle (where their labels sit) in proportion to how far
+  // each end is from its side's middle. Negative spread pulls them gently back together.
+  const fan = s => s > 0 ? .3 * s : .2 * s;
+  if (p.nx && q.nx) { c1y += (p.off || 0) * fan(sp.y); c2y += (q.off || 0) * fan(sp.y); }
+  if (p.ny && q.ny) { c1x += (p.off || 0) * fan(sp.x); c2x += (q.off || 0) * fan(sp.x); }
+  // Bend: bow the whole curve sideways (perpendicular to the straight line between its ends), which
+  // the router uses to steer a link around other links and boxes.
+  if (bend) {
+    const dx = bx - p.x, dy = by - p.y, len = Math.hypot(dx, dy) || 1, ox = -dy / len * bend, oy = dx / len * bend;
+    c1x += ox; c1y += oy; c2x += ox; c2y += oy;
+  }
+  const px = -q.ny * 4.5, py = q.nx * 4.5;
+  return {
+    d: `M${p.x} ${p.y} C${c1x} ${c1y} ${c2x} ${c2y} ${bx} ${by}`,
+    arrow: `M${q.x} ${q.y} L${bx + px} ${by + py} L${bx - px} ${by - py} Z`,
+    mx: (p.x + 3*c1x + 3*c2x + bx) / 8, my: (p.y + 3*c1y + 3*c2y + by) / 8,
+    pts: [p.x, p.y, c1x, c1y, c2x, c2y, bx, by].map(v => Math.round(v * 10) / 10).join(','),
+  };
+}
+function renderEdges() {
+  const byId = Object.fromEntries(viewNodes().map(n => [n.id, n]));
+  const routes = computeRoutes(byId);
+  const ends = layoutEnds(byId, routes);
+  let svg = '', labels = '', handles = '', arrows = '', selSvg = '';
+  // Temp line while making or re-attaching a link: snaps to the side it would attach to.
+  const tempTo = () => {
+    const o = drag.over && byId[drag.over];
+    if (!o) return {x:drag.cur.x, y:drag.cur.y, nx:0, ny:0};
+    const el = drag.overPort ? portPt(o, drag.overPort) : portPt(o, nearestSide(o, drag.cur));
+    return el;
+  };
+  for (const e of C.edges) {
+    const a = byId[e.from], b = byId[e.to]; if (!a || !b) continue;
+    if (drag?.mode === 'reattach' && drag.eid === e.id) {
+      const fixed = drag.end === 'to' ? ends[e.id + ':from'] : ends[e.id + ':to'], m = tempTo();
+      const g = drag.end === 'to' ? geom(fixed, m) : geom(m, fixed);
+      svg += `<path class="e temp" d="${g.d}"/><path class="a sel" d="${g.arrow}"/>`;
+      continue;
+    }
+    const p = ends[e.id + ':from'], q = ends[e.id + ':to'];
+    const g = geom(p, q, routes[e.id]?.bend || 0), s = sel.kind === 'edge' && sel.id === e.id ? ' sel' : '';
+    // Each link is drawn over a thin halo in the background colour, so where two links must cross,
+    // the one on top shows a small gap in the one below: they clearly pass, not join.
+    // Arrowheads go on last so a later halo never clips them; the selected link is drawn on top.
+    const line = `<path class="halo" d="${g.d}"/><path class="hit" data-eid="${e.id}" d="${g.d}"/><path class="e ${e.kind}${s}" data-e="${e.id}" d="${g.d}"/>`;
+    if (s) selSvg += line; else svg += line;
+    arrows += `<path class="a ${e.kind}${s}" data-e="${e.id}" d="${g.arrow}"/>`;
+    if (s) handles += `<circle class="eh" data-eid="${e.id}" data-end="from" cx="${p.x}" cy="${p.y}" r="6"/><circle class="eh" data-eid="${e.id}" data-end="to" cx="${q.x}" cy="${q.y}" r="6"/>`;
+    const cs = e.conds.map(c => c.trim()).filter(Boolean);
+    // In compact detail the IF conditions fold into a small "IF ×n" chip; hover or select the link to read them.
+    if (e.label || cs.length)
+      labels += `<div class="elabel ${e.kind}${s}" data-eid="${e.id}" data-pts="${g.pts}" style="left:${g.mx}px;top:${g.my}px">${e.label ? `<b>${esc(e.label)}</b>` : ''}${cs.length ? `<span class="cchip">IF ×${cs.length}</span><span class="cond"><em>IF</em> ${cs.map(esc).join(' <em>AND</em> ')}</span>` : ''}</div>`;
+  }
+  if (drag?.mode === 'connect') {
+    const g = geom(portPt(byId[drag.from], drag.side), tempTo());
+    svg += `<path class="e temp" d="${g.d}"/>${drag.over ? `<path class="a sel" d="${g.arrow}"/>` : ''}`;
+  }
+  $('#eg').innerHTML = svg + selSvg + arrows; $('#elabels').innerHTML = labels; $('#hg').innerHTML = handles;
+  declutterLabels(byId);
+}
+// Place link labels so they don't cover boxes or each other. Each label first tries spots along its
+// own link (middle outwards), so it stays visibly attached. Only if every spot on the line is taken
+// does it step sideways off the line, with a faint dotted leader back to its link.
+function declutterLabels(byId) {
+  const els = [...$('#elabels').children]; if (!els.length) return;
+  const pad = 8;
+  const boxes = Object.values(byId).filter(n => !isFrame(n)).map(n => ({x:n.x + n.w / 2, y:n.y + n.h / 2, w:n.w, h:n.h}));
+  const over = (a, b) => Math.abs(a.x - b.x) < (a.w + b.w) / 2 + pad && Math.abs(a.y - b.y) < (a.h + b.h) / 2 + pad;
+  const placed = [];
+  const cost = r => boxes.reduce((k, b) => k + (over(r, b) ? 3 : 0), 0) + placed.reduce((k, b) => k + (over(r, b) ? 2 : 0), 0);
+  // Longest labels are hardest to fit, so they choose first.
+  const L = els.map(el => ({el, w: el.offsetWidth, h: el.offsetHeight, P: (el.dataset.pts || '').split(',').map(Number)}))
+    .sort((a, b) => b.w * b.h - a.w * a.h);
+  let leaders = '';
+  for (const a of L) {
+    if (a.P.length !== 8) continue;
+    const P = a.P, at = t => { const u = 1 - t; return {x: u*u*u*P[0] + 3*u*u*t*P[2] + 3*u*t*t*P[4] + t*t*t*P[6], y: u*u*u*P[1] + 3*u*u*t*P[3] + 3*u*t*t*P[5] + t*t*t*P[7]}; };
+    let best = null, bestCost = Infinity, anchor = null;
+    for (const t of [.5, .42, .58, .34, .66, .26, .74, .18, .82]) {
+      const c = at(t), r = {x:c.x, y:c.y, w:a.w, h:a.h}, k = cost(r);
+      if (k < bestCost) { best = r; bestCost = k; anchor = c; }
+      if (!k) break;
+    }
+    if (bestCost > 0) {   // no free spot on the line: step up or down from the middle until clear
+      const m = at(.5);
+      for (let i = 1; i <= 48; i++) {
+        const dy = Math.ceil(i / 2) * 12 * (i % 2 ? -1 : 1), r = {x:m.x, y:m.y + dy, w:a.w, h:a.h}, k = cost(r);
+        if (k < bestCost) { best = r; bestCost = k; anchor = m; }
+        if (!k) break;
+      }
+      if (anchor === m && Math.abs(best.y - m.y) > a.h / 2)
+        leaders += `<path class="leader" d="M${m.x} ${m.y} L${best.x} ${best.y + (best.y > m.y ? -a.h / 2 : a.h / 2)}"/>`;
+    }
+    placed.push(best);
+    a.el.style.left = best.x + 'px'; a.el.style.top = best.y + 'px';
+  }
+  if (leaders) $('#eg').insertAdjacentHTML('afterbegin', leaders);
+}
+// Fade everything not connected to the focused box or link (the selection, or what the pointer is over).
+function applyFocus(f) {
+  const on = f && f.kind && f.id && !(drag && drag.mode !== 'pan');
+  world.classList.toggle('focus', !!on);
+  const nodes = new Set(), links = new Set();
+  if (on) {
+    if (f.kind === 'edge') { const e = getEdge(f.id); if (e) { links.add(e.id); nodes.add(e.from); nodes.add(e.to); } }
+    else { nodes.add(f.id); for (const e of C.edges) if (e.from === f.id || e.to === f.id) { links.add(e.id); nodes.add(e.from); nodes.add(e.to); } }
+  }
+  world.querySelectorAll('#nodes [data-id]').forEach(el => el.classList.toggle('rel', nodes.has(el.dataset.id)));
+  world.querySelectorAll('[data-e], .elabel').forEach(el => el.classList.toggle('rel', links.has(el.dataset.e || el.dataset.eid)));
+}
+// Hovering highlights after a short pause, so sweeping the pointer across the canvas doesn't flicker.
+let hoverFocus = null, hoverT;
+world.addEventListener('pointerover', e => {
+  if (drag || e.pointerType !== 'mouse' || commentMode) return;
+  const n = e.target.closest('#nodes .node'), l = e.target.closest('[data-eid]');
+  const f = n ? {kind:'node', id:n.dataset.id} : l ? {kind:'edge', id:l.dataset.eid} : null;
+  if (f?.id === hoverFocus?.id) return;
+  clearTimeout(hoverT);
+  hoverT = setTimeout(() => { hoverFocus = f; applyFocus(f || sel); }, f ? 350 : 120);
+});
+world.addEventListener('pointerleave', () => { clearTimeout(hoverT); hoverFocus = null; applyFocus(sel); });
+let lastCounts = [];
+function renderCanvas() {
+  const {flags, counts, inside} = computeFlags(); lastCounts = counts;
+  // Largest frames paint first so nested (smaller) frames sit on top and stay grabbable.
+  $('#groups').innerHTML = C.nodes.filter(isFrame).sort((a, b) => area(b) - area(a)).map(n => nodeHTML(n)).join('');
+  $('#nodes').innerHTML = viewNodes().filter(n => !isFrame(n)).map(n => nodeHTML(n, flags[n.id], inside[n.id])).join('');
+  renderEdges();
+  $('#empty').hidden = viewNodes().length > 0;
+  updateCounts();
+  renderNav();
+  updateSpacingUI();
+  applyFocus(hoverFocus || sel);
+  if (cctl) { applyCommentMarks(); schedulePins(); }
+}
+function updateCounts() {
+  document.querySelectorAll('[data-count]').forEach(el => {
+    const c = lastCounts[+el.dataset.count] || 0;
+    el.textContent = c ? `Flags ${c} component${c > 1 ? 's' : ''} (all levels)` : 'No matches right now';
+    el.classList.toggle('hit', c > 0);
+  });
+}
+
+/* ---------- inspector ---------- */
+const insp = $('#insp');
+function tpl(name) {
+  switch (name) {
+    case 'nrule': return {if:[''], then:''};
+    case 'crule': return {id:uid(), name:'New rule', enabled:true, match:'all', conds:[{field:'type', op:'is', value:'agent'}], then:'Flag', color:'amber'};
+    case 'ccond': return {field:'tag', op:'has', value:''};
+    default: return '';
+  }
+}
+const opt = (v, label, cur) => `<option value="${esc(v)}"${v === cur ? ' selected' : ''}>${esc(label)}</option>`;
+
+function crumbs(n) {
+  const a = ancestors(n); if (!a.length) return '';
+  return `<div class="crumbs">Inside ${a.map(g => `<button data-act="goto" data-id="${g.id}">${esc(g.name || 'Group')}</button>`).join('<span>›</span>')}</div>`;
+}
+function pinPanel(p) {
+  return `<div class="ih" style="--tc:var(--accent)"><span class="kind">${p.dir === 'in' ? 'Entry point' : 'Exit point'}</span>
+    <button class="x mobile-only" data-act="close" aria-label="Close details">×</button></div>
+    <h3 style="margin:0;font-size:15px">${esc(p.name)}</h3>
+    <p class="help">This is the link “${esc(p.link.label || 'unlabelled')}” ${p.dir === 'in' ? 'from' : 'to'} <b>${esc(p.other)}</b> on the level above.
+      Link it ${p.dir === 'in' ? 'to the boxes that receive it' : 'from the boxes that produce it'} to show what happens inside this sub-flow.</p>
+    <p class="help">To rename or remove it, change the link on the level above. You can move this point anywhere on this canvas.</p>
+    <div class="row"><button class="btn" data-act="up">Go up a level</button></div>`;
+}
+function nodePanel(n) {
+  if (n.type === 'pin') return pinPanel(n);
+  const T = TYPES[n.type], deg = degrees(), sub = !!n.sub;
+  const annotate = n.type === 'note' || n.type === 'group';
+  const allTags = [...new Set(C.nodes.flatMap(x => x.tags))];
+  let h = `<div class="ih" style="--tc:var(--t-${n.type})"><span class="kind"><i class="g g-${sub ? 'subflow' : n.type}"></i>${sub ? 'Sub-flow' : T.label}</span>
+    <button class="x mobile-only" data-act="close" aria-label="Close details">×</button></div>
+    ${crumbs(n)}
+    <div class="f"><label for="iName">Name</label><input id="iName" data-bind="name" value="${esc(n.name)}"></div>`;
+  if (sub) {
+    const steps = n.sub.nodes.length, links = n.sub.edges.length;
+    h += `<div class="row"><button class="btn primary" data-act="open">Open sub-flow</button>
+        <button class="btn" data-act="to-frame" title="Put its contents back on this canvas inside a see-through frame">Expand back to frame</button></div>
+      <p class="readout">${steps} step${steps === 1 ? '' : 's'} · ${links} link${links === 1 ? '' : 's'} inside</p>
+      <div class="row"><button class="btn" data-act="dup">Duplicate</button><button class="btn" data-act="wrap">Wrap in group</button>
+        <button class="btn danger" data-act="delete">Delete sub-flow</button></div>`;
+  } else {
+    h += `<div class="row">
+      ${annotate ? '' : `<select id="iType" data-bind="type" aria-label="Component type" style="flex:1">${Object.keys(TYPES).filter(k => !['note','group'].includes(k)).map(k => opt(k, TYPES[k].label, n.type)).join('')}</select>`}
+      ${n.type === 'group' ? '<button class="btn primary" data-act="to-sub" title="Move what’s inside onto its own canvas and shrink this to one box">Turn into sub-flow</button>' : ''}
+      <button class="btn" data-act="dup">${n.type === 'group' ? 'Duplicate with contents' : 'Duplicate'}</button>
+      <button class="btn" data-act="wrap" title="Put a new group around this">Wrap in group</button>
+      <button class="btn danger" data-act="delete">${n.type === 'group' ? 'Delete frame' : 'Delete'}</button>
+      ${n.type === 'group' ? '<button class="btn danger" data-act="delete-all">Delete with contents</button>' : ''}
+    </div>`;
+  }
+  if (n.type === 'group' && !sub) {
+    const kids = children(n), all = descendants(n).length;
+    h += `<div class="f"><div class="sect">Contains <small>${kids.length} direct · ${all} total</small></div>
+      ${kids.length ? `<div class="chips">${kids.map(k => `<button class="chip" style="padding-right:7px;cursor:pointer" data-act="goto" data-id="${k.id}"><i class="g g-${k.type}" style="--tc:var(--t-${k.type});width:9px;height:9px;margin-right:4px"></i>${esc(k.name || TYPES[k.type].label)}</button>`).join('')}</div>`
+        : '<p class="help">Drag boxes or other groups inside this frame to nest them.</p>'}</div>`;
+  }
+  if (n.type === 'agent') {
+    const m = findModel(n);
+    h += `<div class="f"><div class="sect">Model</div><div class="mgrid">
+      <label>Provider<select id="iProv" data-bind="provider">${Object.entries(PROVIDERS).map(([k, p]) => opt(k, p.label, n.provider)).join('')}</select></label>
+      <label>Effort<select id="iEff" data-bind="effort"${m.efforts.length < 2 ? ' disabled' : ''}>${m.efforts.map(x => opt(x, EFFORT_LABELS[x], n.effort)).join('')}</select></label>
+      <label class="full">Model<select id="iModel" data-bind="model">${PROVIDERS[n.provider].models.map(x => opt(x.id, x.label, n.model)).join('')}</select></label>
+    </div><div class="readout">${esc(n.model)}</div></div>`;
+  }
+  if (n.type === 'folder')
+    h += `<div class="f"><label for="iPath">Path</label><input id="iPath" data-bind="path" value="${esc(n.path)}" placeholder="e.g. ~/code/my-project" spellcheck="false" style="font-family:var(--mono)"></div>`;
+  h += `<div class="f"><label for="iDesc">${n.type === 'note' ? 'Note text' : n.type === 'agent' ? 'Instructions / prompt' : n.type === 'group' ? 'Purpose' : 'Description'}</label><textarea id="iDesc" data-bind="desc" rows="3">${esc(n.desc)}</textarea></div>`;
+  if (!annotate) {
+    h += `<div class="f"><div class="sect">Tags <small>Enter to add</small></div>
+      <div class="chips">${n.tags.map((t, i) => `<span class="chip">#${esc(t)}<button class="x" data-act="del" data-path="tags" data-i="${i}" aria-label="Remove tag ${esc(t)}">×</button></span>`).join('')}</div>
+      <input id="tagIn" list="tagList" placeholder="e.g. pii, rag, critical" autocomplete="off"><datalist id="tagList">${allTags.map(t => `<option value="${esc(t)}">`).join('')}</datalist></div>`;
+    h += `<div class="f"><div class="sect">Rules <small>IF … AND … THEN</small></div>
+      ${n.rules.map((r, i) => `<div class="rule">
+        <div class="rule-top"><span class="rl">Rule ${i + 1}</span><button class="x" style="margin-left:auto" data-act="del" data-path="rules" data-i="${i}" aria-label="Delete rule">×</button></div>
+        ${r.if.map((c, j) => `<div class="rrow"><span class="kw ${j ? 'and' : 'if'}">${j ? 'AND' : 'IF'}</span><input id="nr${i}c${j}" data-bind="rules.${i}.if.${j}" value="${esc(c)}" placeholder="e.g. confidence < 0.7">${r.if.length > 1 ? `<button class="x" data-act="del" data-path="rules.${i}.if" data-i="${j}" aria-label="Remove condition">×</button>` : '<span></span>'}</div>`).join('')}
+        <button class="link" data-act="push" data-path="rules.${i}.if" data-tpl="str">+ AND condition</button>
+        <div class="rrow"><span class="kw then">THEN</span><input id="nr${i}t" data-bind="rules.${i}.then" value="${esc(r.then)}" placeholder="e.g. route to Human review"><span></span></div>
+      </div>`).join('')}
+      <button class="btn" style="align-self:flex-start" data-act="push" data-path="rules" data-tpl="nrule">+ Add rule</button></div>`;
+  }
+  h += `<div class="f"><div class="sect">Comments <small>${n.comments.length || ''}</small></div>
+    ${n.comments.map((c, i) => `<div class="cmt"><p>${esc(c.text)}</p><time>${new Date(c.t).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'})}</time><button class="x" data-act="del" data-path="comments" data-i="${i}" aria-label="Delete comment">×</button></div>`).join('')}
+    <textarea id="cmtIn" rows="2" placeholder="Add a comment…" style="min-height:48px"></textarea>
+    <button class="btn" style="align-self:flex-start" data-act="comment">Add comment</button></div>
+    <div class="readout">${Math.round(n.w)} × ${Math.round(n.h)} px${n.type === 'note' ? '' : ` · ${deg.in[n.id] || 0} in · ${deg.out[n.id] || 0} out`}</div>`;
+  return h;
+}
+
+function edgePanel(e) {
+  const a = getNode(e.from), b = getNode(e.to);
+  return `<div class="ih"><span class="kind">Link</span><button class="x mobile-only" data-act="close" aria-label="Close details">×</button></div>
+    <h3 style="margin:0;font-size:15px;line-height:1.4">${esc(a?.name || '?')} <span style="color:var(--muted)">→</span> ${esc(b?.name || '?')}</h3>
+    <div class="f"><label for="eLabel">Label</label><input id="eLabel" data-bind="label" value="${esc(e.label)}" placeholder="e.g. hand off, returns summary"></div>
+    <div class="f"><label for="eKind">Behaviour</label><select id="eKind" data-bind="kind">${Object.entries(KINDS).map(([k, l]) => opt(k, l, e.kind)).join('')}</select></div>
+    <div class="f"><div class="sect">Attach points <small>or drag the end dots</small></div><div class="mgrid">
+      <label>Leaves ${esc(a?.name || 'start')} from<select id="eFromSide" data-bind="fromSide">${Object.entries(SIDES).map(([k, l]) => opt(k, l, e.fromSide || '')).join('')}</select></label>
+      <label>Arrives at ${esc(b?.name || 'end')} on<select id="eToSide" data-bind="toSide">${Object.entries(SIDES).map(([k, l]) => opt(k, l, e.toSide || '')).join('')}</select></label>
+    </div></div>
+    <div class="f"><div class="sect">Follow this link only if</div>
+      ${e.conds.map((c, j) => `<div class="rrow"><span class="kw ${j ? 'and' : 'if'}">${j ? 'AND' : 'IF'}</span><input id="ec${j}" data-bind="conds.${j}" value="${esc(c)}" placeholder="e.g. intent = billing"><button class="x" data-act="del" data-path="conds" data-i="${j}" aria-label="Remove condition">×</button></div>`).join('')}
+      <button class="link" data-act="push" data-path="conds" data-tpl="str">${e.conds.length ? '+ AND condition' : '+ Add IF condition'}</button></div>
+    <div class="f"><label for="eNote">Comment</label><textarea id="eNote" data-bind="note" rows="2">${esc(e.note)}</textarea></div>
+    <div class="row"><button class="btn" data-act="reverse">Reverse direction</button><button class="btn danger" data-act="delete">Delete link</button></div>`;
+}
+
+function canvasPanel() {
+  const typeOpts = v => RULE_TYPES.map(k => opt(k, TYPES[k].label, v)).join('');
+  return `<div class="ih"><h3>${curGroup ? esc(curGroup.name || 'Sub-flow') : 'Canvas'}</h3><button class="x mobile-only" data-act="close" aria-label="Close details">×</button></div>
+    ${curGroup ? `<p class="help">You’re inside this sub-flow. Dashed pills are its entry and exit points: the links that reach it on the level above.</p>
+      <div class="row"><button class="btn" data-act="up">Go up a level</button></div>`
+      : `<div class="f"><label for="cNotes">Canvas notes</label><textarea id="cNotes" data-bind="notes" rows="3" placeholder="Goal, constraints, open questions…">${esc(state.notes)}</textarea></div>`}
+    <div class="f"><div class="sect">Canvas rules</div>
+      <p class="help">Rules check every component on every level, sub-flows included. Anything that matches gets a coloured flag, and a sub-flow box shows how many are flagged inside it.</p>
+      ${state.rules.map((r, i) => `<div class="rule" style="--rc:var(--r-${r.color})">
+        <div class="rule-top"><i class="sw"></i><input class="rname" id="cr${i}n" data-bind="rules.${i}.name" value="${esc(r.name)}" aria-label="Rule name">
+          <label class="tog"><input type="checkbox" id="cr${i}on" data-bind="rules.${i}.enabled"${r.enabled !== false ? ' checked' : ''}>On</label>
+          <button class="x" data-act="del" data-path="rules" data-i="${i}" aria-label="Delete rule">×</button></div>
+        <div class="rrow"><span class="rl">Match</span><select id="cr${i}m" data-bind="rules.${i}.match">${opt('all', 'ALL conditions (AND)', r.match)}${opt('any', 'ANY condition (OR)', r.match)}</select><span></span></div>
+        ${r.conds.map((c, j) => { const F = FIELDS[c.field]; const base = `rules.${i}.conds.${j}`;
+          const val = F.kind === 'type' ? `<select class="val" id="cr${i}c${j}v" data-bind="${base}.value">${typeOpts(c.value)}</select>`
+            : F.kind === 'provider' ? `<select class="val" id="cr${i}c${j}v" data-bind="${base}.value">${Object.entries(PROVIDERS).map(([k, p]) => opt(k, p.label, c.value)).join('')}</select>`
+            : `<input class="val" id="cr${i}c${j}v" data-bind="${base}.value" value="${esc(c.value)}" ${F.kind === 'num' ? 'inputmode="numeric" placeholder="0"' : 'placeholder="value"'}>`;
+          return `<div class="crow"><span class="kw ${j ? 'and' : 'if'}">${j ? (r.match === 'any' ? 'OR' : 'AND') : 'IF'}</span>
+            <select id="cr${i}c${j}f" data-bind="${base}.field">${Object.entries(FIELDS).map(([k, f]) => opt(k, f.label, c.field)).join('')}</select>
+            <select id="cr${i}c${j}o" data-bind="${base}.op">${F.ops.map(o => opt(o, o, c.op)).join('')}</select>
+            <button class="x" data-act="del" data-path="rules.${i}.conds" data-i="${j}" aria-label="Remove condition">×</button>
+            <span></span>${val}</div>`; }).join('')}
+        <button class="link" data-act="push" data-path="rules.${i}.conds" data-tpl="ccond">+ ${r.match === 'any' ? 'OR' : 'AND'} condition</button>
+        <div class="rrow"><span class="kw then">THEN</span><input id="cr${i}t" data-bind="rules.${i}.then" value="${esc(r.then)}" placeholder="Flag text">
+          <select id="cr${i}col" data-bind="rules.${i}.color" aria-label="Flag colour" style="width:84px">${COLORS.map(c => opt(c, c, r.color)).join('')}</select></div>
+        <div class="count" data-count="${i}"></div>
+      </div>`).join('')}
+      <button class="btn" style="align-self:flex-start" data-act="push" data-path="rules" data-tpl="crule">+ New canvas rule</button></div>
+    <div class="readout">${C.nodes.length} components · ${C.edges.length} links${curGroup ? " on this level" : ""}</div>
+    <div class="f"><div class="sect">Shortcuts</div><ul class="keys">
+      <li><kbd>Del</kbd> remove selected · <kbd>Esc</kbd> deselect</li>
+      <li><kbd>Ctrl</kbd>+<kbd>D</kbd> duplicate · <kbd>Ctrl</kbd>+<kbd>Z</kbd> undo</li>
+      <li>Drag the corner of a box to resize it</li>
+      <li>Drop a box or group inside a group to nest it; moving a group moves everything nested in it</li>
+      <li>Double-click a sub-flow to open it · <kbd>Backspace</kbd> with nothing selected goes up a level</li>
+      <li><kbd>Alt</kbd>+arrows: taller, shorter, narrower, wider (also the Spacing pad, bottom right)</li></ul></div>`;
+}
+
+function bindRoot() { return sel.kind === 'node' ? getNode(sel.id) : sel.kind === 'edge' ? getEdge(sel.id) : state; }
+function renderInspector() {
+  const r = bindRoot();
+  if (!r) { sel = {kind:null, id:null}; return renderInspector(); }
+  const keep = document.activeElement?.id;
+  insp.innerHTML = sel.kind === 'node' ? nodePanel(r) : sel.kind === 'edge' ? edgePanel(r) : canvasPanel();
+  updateCounts();
+  if (keep && insp.contains(document.getElementById(keep))) document.getElementById(keep).focus();
+}
+function select(kind, id) {
+  if (sel.kind === kind && sel.id === id) return;
+  sel = {kind, id}; renderInspector();
+}
+
+insp.addEventListener('focusin', e => { if (e.target.matches('input:not([type=checkbox]),textarea')) checkpoint(); });
+insp.addEventListener('input', e => {
+  const t = e.target; if (!t.dataset.bind || t.tagName === 'SELECT' || t.type === 'checkbox') return;
+  setPath(bindRoot(), t.dataset.bind, t.value); renderCanvas(); save();
+});
+insp.addEventListener('change', e => {
+  const t = e.target; if (!t.dataset.bind || (t.tagName !== 'SELECT' && t.type !== 'checkbox')) return;
+  checkpoint();
+  const root = bindRoot(), path = t.dataset.bind, v = t.type === 'checkbox' ? t.checked : t.value;
+  setPath(root, path, v);
+  if (path.endsWith('.field')) { const c = getPath(root, path.slice(0, -6)), F = FIELDS[v]; c.op = F.ops[0]; c.value = F.kind === 'type' ? 'agent' : F.kind === 'provider' ? 'claude' : F.kind === 'num' ? '0' : ''; }
+  if (sel.kind === 'node') {
+    // New provider → its first model and that model's default effort; new model keeps the effort if it still applies.
+    if (path === 'provider') { root.model = null; root.effort = null; }
+    fixAgent(root);
+  }
+  renderCanvas(); renderInspector(); save();
+});
+insp.addEventListener('keydown', e => {
+  if (e.target.id === 'tagIn' && (e.key === 'Enter' || e.key === ',')) {
+    e.preventDefault();
+    const n = getNode(sel.id), v = e.target.value.trim().replace(/^#/, '').replace(/,/g, '');
+    if (!v || n.tags.includes(v)) { e.target.value = ''; return; }
+    checkpoint(); n.tags.push(v); renderCanvas(); renderInspector(); save(); $('#tagIn')?.focus();
+  }
+  if (e.target.id === 'cmtIn' && e.key === 'Enter' && (e.ctrlKey || e.metaKey)) insp.querySelector('[data-act=comment]').click();
+});
+insp.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const act = b.dataset.act, root = bindRoot();
+  if (act === 'close') { document.body.classList.remove('insp-open'); return; }
+  if (act === 'push') {
+    checkpoint(); const arr = getPath(root, b.dataset.path); arr.push(tpl(b.dataset.tpl));
+    if (sel.kind === 'edge' && b.dataset.path === 'conds' && root.kind === 'default') root.kind = 'conditional';
+    renderCanvas(); renderInspector(); save();
+    insp.querySelector(`[data-bind^="${b.dataset.path}.${arr.length - 1}"]:not(select)`)?.focus();
+    return;
+  }
+  if (act === 'del') { checkpoint(); getPath(root, b.dataset.path).splice(+b.dataset.i, 1); }
+  else if (act === 'comment') { const t = $('#cmtIn').value.trim(); if (!t) return; checkpoint(); root.comments.push({t:Date.now(), text:t}); }
+  else if (act === 'delete') return deleteSelected();
+  else if (act === 'dup') return duplicate();
+  else if (act === 'wrap') return wrapInGroup();
+  else if (act === 'delete-all') return deleteWithContents();
+  else if (act === 'goto') { select('node', b.dataset.id); renderCanvas(); return; }
+  else if (act === 'open') return enterSub(root.id);
+  else if (act === 'up') return goUp();
+  else if (act === 'to-sub') return toSubflow(root);
+  else if (act === 'to-frame') return toFrame(root);
+  else if (act === 'reverse') { checkpoint(); [root.from, root.to, root.fromSide, root.toSide] = [root.to, root.from, root.toSide, root.fromSide]; }
+  renderCanvas(); renderInspector(); save();
+});
+
+/* ---------- mutations ---------- */
+const SUBFLOW = {label:'Sub-flow', name:'Sub-flow', hint:'Group you can open', w:260, h:150};
+function addNode(type, pt) {
+  checkpoint();
+  const isSub = type === 'subflow', T = isSub ? SUBFLOW : TYPES[type];
+  const n = fixAgent({id:uid(), type: isSub ? 'group' : type, x:snap(pt.x - T.w/2), y:snap(pt.y - T.h/2), w:T.w, h:T.h, name:T.name, desc:'', path:'', tags:[], rules:[], comments:[]});
+  if (isSub) n.sub = {nodes:[], edges:[], pins:{}};
+  C.nodes.push(n); sel = {kind:'node', id:n.id};
+  renderCanvas(); renderInspector(); save();
+}
+function deleteSelected() {
+  if (!sel.kind || isPin(sel.id)) return;
+  checkpoint();
+  if (sel.kind === 'node') { C.nodes = C.nodes.filter(n => n.id !== sel.id); C.edges = C.edges.filter(e => e.from !== sel.id && e.to !== sel.id); }
+  else C.edges = C.edges.filter(e => e.id !== sel.id);
+  sel = {kind:null, id:null}; renderCanvas(); renderInspector(); save();
+}
+
+/* ---------- sub-flows ---------- */
+// Frame → sub-flow: everything nested in the frame moves onto the group's own canvas and the group
+// shrinks to one box. Links that crossed the frame's edge now attach to the box on this level, and
+// continue inside from an entry/exit point, so nothing about the flow is lost.
+function toSubflow(g) {
+  checkpoint();
+  const inner = descendants(g), ids = new Set(inner.map(n => n.id));
+  const sub = {nodes:inner, edges:[], pins:{}}, keep = [];
+  const link = (e, from, to, fromSide, toSide) => ({id:uid(), from, to, fromSide, toSide, kind:e.kind, label:'', conds:[], note:''});
+  for (const e of C.edges) {
+    const fi = ids.has(e.from), ti = ids.has(e.to);
+    if (fi && ti) sub.edges.push(e);
+    else if ((fi || ti) && (e.from === g.id || e.to === g.id)) continue;   // frame ↔ its own contents: nothing to keep
+    else if (ti) { sub.edges.push(link(e, 'pin:' + e.id, e.to, '', e.toSide)); e.to = g.id; e.toSide = ''; keep.push(e); }
+    else if (fi) { sub.edges.push(link(e, e.from, 'pin:' + e.id, e.fromSide, '')); e.from = g.id; e.fromSide = ''; keep.push(e); }
+    else keep.push(e);
+  }
+  C.nodes = C.nodes.filter(n => !ids.has(n.id)); C.edges = keep;
+  g.sub = sub; g.w = SUBFLOW.w; g.h = SUBFLOW.h;
+  renderCanvas(); renderInspector(); save();
+  toast('Turned into a sub-flow. Double-click it to open.');
+}
+// Sub-flow → frame: its contents come back onto this canvas inside the frame. Links that ran through
+// an entry/exit point are reconnected straight to the box inside.
+function toFrame(g) {
+  checkpoint();
+  const s = g.sub, b = contentBox(s), pad = 24, head = 48;
+  const taken = new Set(C.nodes.map(n => n.id)), remap = {};
+  for (const n of s.nodes) if (taken.has(n.id)) { remap[n.id] = uid(); n.id = remap[n.id]; }
+  const rid = id => remap[id] || id;
+  const dx = g.x + pad - (b.x + 24), dy = g.y + head - (b.y + 24);
+  for (const n of s.nodes) { n.x = snap(n.x + dx); n.y = snap(n.y + dy); }
+  C.nodes.push(...s.nodes);
+  const used = new Set();
+  for (const ie of s.edges) {
+    ie.from = rid(ie.from); ie.to = rid(ie.to);
+    const fp = isPin(ie.from) && ie.from.slice(4), tp = isPin(ie.to) && ie.to.slice(4);
+    if (!fp && !tp) { C.edges.push(ie); continue; }
+    if (fp && tp) continue;
+    const pe = C.edges.find(e => e.id === (fp || tp)); if (!pe) continue;
+    // First inner link reuses the outer link; any extra ones become copies of it.
+    if (fp) { if (!used.has(pe.id)) { used.add(pe.id); pe.to = ie.to; pe.toSide = ie.toSide; } else C.edges.push({...JSON.parse(JSON.stringify(pe)), id:uid(), to:ie.to, toSide:ie.toSide}); }
+    else { if (!used.has(pe.id)) { used.add(pe.id); pe.from = ie.from; pe.fromSide = ie.fromSide; } else C.edges.push({...JSON.parse(JSON.stringify(pe)), id:uid(), from:ie.from, fromSide:ie.fromSide}); }
+  }
+  g.w = Math.max(240, snap(b.w - 48 + pad * 2)); g.h = snap(b.h - 48 + head + pad);
+  delete g.sub;
+  renderCanvas(); renderInspector(); save();
+}
+function renderNav() {
+  const nav = $('#nav');
+  nav.hidden = !path.length;
+  if (!path.length) return;
+  let c = state; const names = [];
+  for (const id of path) { const g = c.nodes.find(n => n.id === id); names.push(g?.name || 'Sub-flow'); c = g.sub; }
+  nav.innerHTML = `<button data-level="${path.length - 1}" title="Back to the level above (Backspace)">↑ Up</button><span class="sepr">|</span><button data-level="0">Overview</button>` + names.map((nm, i) => `<span class="sepr">›</span>` +
+    (i === names.length - 1 ? `<b>${esc(nm)}</b>` : `<button data-level="${i + 1}">${esc(nm)}</button>`)).join('');
+}
+$('#nav').addEventListener('click', e => { const b = e.target.closest('[data-level]'); if (b) goToLevel(+b.dataset.level); });
+function enterSub(id, v) {
+  // Remember where you were, unless you zoomed in to get here: that camera sits right on top of
+  // the box (one scroll from re-entering), so coming back up fits the whole level instead.
+  if (v) delete views[path.join('/')]; else views[path.join('/')] = {...view};
+  path.push(id); resolvePath();
+  sel = {kind:null, id:null}; renderAll();
+  if (v) { view = v; applyView(); } else fit();
+  focusCanvas();
+}
+// Leave to depth `k` (0 = overview), selecting the sub-flow box you came out of.
+function goToLevel(k, v) {
+  if (k >= path.length) return;
+  const cameFrom = path[k];
+  path = path.slice(0, k); resolvePath();
+  sel = {kind:'node', id:cameFrom}; renderAll();
+  const saved = views[path.join('/')];
+  if (v) view = v; else if (saved) view = saved; else return fit();
+  applyView(); focusCanvas();
+}
+const goUp = () => goToLevel(path.length - 1);
+// A group is copied with everything nested in it (and the links between those boxes),
+// placed beside the original so the two frames don't overlap.
+function duplicate() {
+  if (sel.kind !== 'node' || isPin(sel.id)) return;
+  checkpoint();
+  const src = getNode(sel.id), set = src.type === 'group' ? [src, ...descendants(src)] : [src];
+  const dx = src.type === 'group' ? src.w + 40 : 24, dy = src.type === 'group' ? 0 : 24, map = {};
+  for (const n of set) { const c = JSON.parse(JSON.stringify(n)); map[n.id] = c.id = uid(); c.x += dx; c.y += dy; C.nodes.push(c); }
+  for (const e of C.edges.filter(e => map[e.from] && map[e.to])) C.edges.push({...JSON.parse(JSON.stringify(e)), id:uid(), from:map[e.from], to:map[e.to]});
+  sel = {kind:'node', id:map[src.id]};
+  renderCanvas(); renderInspector(); save();
+}
+function wrapInGroup() {
+  const n = getNode(sel.id); if (!n || n.type === 'pin') return;
+  checkpoint();
+  const pad = 24, head = 44;
+  const g = {id:uid(), type:'group', x:snap(n.x - pad), y:snap(n.y - head), w:snap(n.w + pad*2), h:snap(n.h + head + pad), name:'Group', desc:'', path:'', tags:[], rules:[], comments:[]};
+  C.nodes.push(g); sel = {kind:'node', id:g.id};
+  renderCanvas(); renderInspector(); save();
+  setTimeout(() => $('#iName')?.select(), 0);
+}
+function deleteWithContents() {
+  const g = getNode(sel.id); if (!g) return;
+  checkpoint();
+  const gone = new Set([g, ...descendants(g)].map(n => n.id));
+  C.nodes = C.nodes.filter(n => !gone.has(n.id));
+  C.edges = C.edges.filter(e => !gone.has(e.from) && !gone.has(e.to));
+  sel = {kind:null, id:null}; renderCanvas(); renderInspector(); save();
+}
+
+/* ---------- pointer: canvas ---------- */
+function toWorld(cx, cy) { const r = vp.getBoundingClientRect(); return {x:(cx - r.left - view.x) / view.z, y:(cy - r.top - view.y) / view.z}; }
+// Link target under a point: a regular box wins; otherwise the innermost (smallest) group around the point.
+function nodeAt(p, except) {
+  const hit = n => n.id !== except && p.x >= n.x && p.x <= n.x + n.w && p.y >= n.y && p.y <= n.y + n.h;
+  const all = viewNodes();
+  for (let i = all.length - 1; i >= 0; i--) { const n = all[i]; if (!isFrame(n) && hit(n)) return n; }
+  let best = null;
+  for (const g of all) if (isFrame(g) && hit(g) && (!best || area(g) < area(best))) best = g;
+  return best;
+}
+let lastDown = {t:0, x:0, y:0};
+// The box a link being drawn or re-attached must not connect back to.
+function linkAnchorId() {
+  if (drag.mode === 'connect') return drag.from;
+  const ed = getEdge(drag.eid); return drag.end === 'to' ? ed?.from : ed?.to;
+}
+function focusCanvas() { try { window.focus(); } catch {} vp.focus({preventScroll:true}); }
+
+vp.addEventListener('pointerdown', e => {
+  if (e.target.closest('.hud')) return;
+  if (commentMode && cctl) return commentPointerDown(e);
+  if (e.pointerType === 'mouse' && e.button !== 0 && e.button !== 1) return;
+  // preventDefault() below also blocks the browser's own click-to-focus, so take focus explicitly;
+  // otherwise Delete / Ctrl+Z go to the host page instead of this canvas.
+  focusCanvas();
+  const t = e.target, nodeEl = t.closest('.node'), eid = t.closest('[data-eid]')?.dataset.eid, w = toWorld(e.clientX, e.clientY);
+  const dbl = Date.now() - lastDown.t < 320 && Math.hypot(e.clientX - lastDown.x, e.clientY - lastDown.y) < 8;
+  lastDown = {t:Date.now(), x:e.clientX, y:e.clientY};
+
+  if (e.button === 1) drag = {mode:'pan', sx:e.clientX, sy:e.clientY, vx:view.x, vy:view.y};
+  else if (t.dataset.port && nodeEl) {
+    drag = {mode:'connect', from:nodeEl.dataset.id, side:t.dataset.port, cur:w, over:null, overPort:null};
+    document.body.classList.add('connecting');
+  } else if (t.classList.contains('eh')) {
+    drag = {mode:'reattach', eid:t.dataset.eid, end:t.dataset.end, cur:w, over:null, overPort:null};
+    document.body.classList.add('connecting');
+  } else if (t.classList.contains('rz') && nodeEl) {
+    const n = getNode(nodeEl.dataset.id); select('node', n.id);
+    drag = {mode:'resize', id:n.id, sx:w.x, sy:w.y, w0:n.w, h0:n.h, moved:false};
+  } else if (nodeEl) {
+    const n = getNode(nodeEl.dataset.id); select('node', n.id);
+    if (dbl && n.sub) { e.preventDefault(); return enterSub(n.id, subMode === 'zoom' ? zoomInView(n) : undefined); }
+    if (dbl) { document.body.classList.add('insp-open'); setTimeout(() => $('#iName')?.select(), 30); }
+    const kids = !isFrame(n) ? [] : descendants(n).map(k => ({k, x:k.x, y:k.y}));
+    drag = {mode:'move', id:n.id, sx:w.x, sy:w.y, x0:n.x, y0:n.y, kids, moved:false, into:null};
+  } else if (eid) {
+    select('edge', eid); if (dbl) document.body.classList.add('insp-open');
+    renderCanvas(); return;
+  } else {
+    if (dbl) { addNode('agent', w); return; }
+    select(null, null);
+    drag = {mode:'pan', sx:e.clientX, sy:e.clientY, vx:view.x, vy:view.y};
+    vp.classList.add('panning');
+  }
+  renderCanvas();
+  vp.setPointerCapture(e.pointerId);
+  e.preventDefault();
+});
+vp.addEventListener('pointermove', e => {
+  if (!drag) return;
+  if (drag.mode === 'pan') { view.x = drag.vx + e.clientX - drag.sx; view.y = drag.vy + e.clientY - drag.sy; applyView(); return; }
+  const w = toWorld(e.clientX, e.clientY);
+  if (drag.mode === 'connect' || drag.mode === 'reattach') {
+    drag.cur = w;
+    const o = nodeAt(w, linkAnchorId())?.id ?? null;
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    drag.overPort = o && el?.dataset?.port && el.closest('.node')?.dataset.id === o ? el.dataset.port : null;
+    if (o !== drag.over) { drag.over = o; renderCanvas(); } else renderEdges();
+    return;
+  }
+  const dx = w.x - drag.sx, dy = w.y - drag.sy;
+  if (!drag.moved) { if (Math.hypot(dx, dy) * view.z < 3) return; checkpoint(); drag.moved = true; }
+  const n = getNode(drag.id);
+  if (drag.mode === 'move') {
+    const sdx = snap(drag.x0 + dx) - drag.x0, sdy = snap(drag.y0 + dy) - drag.y0;
+    n.x = drag.x0 + sdx; n.y = drag.y0 + sdy;
+    for (const k of drag.kids) { k.k.x = k.x + sdx; k.k.y = k.y + sdy; }
+    drag.into = parentOf(n)?.id ?? null;   // highlights the group it will land in
+  } else {
+    n.w = Math.max(n.type === 'group' ? 160 : 110, snap(drag.w0 + dx));
+    n.h = Math.max(n.type === 'group' ? 100 : 56, snap(drag.h0 + dy));
+  }
+  renderCanvas();
+});
+function endDrag(e) {
+  if (!drag) return;
+  if (drag.commentSpot) { if (cctl && e.type === 'pointerup') commentSpotUp(e); drag = null; vp.classList.remove('panning'); return; }
+  const w = toWorld(e.clientX, e.clientY);
+  if (drag.mode === 'connect') {
+    // Both ends are pinned: the side dot you dragged from, and the side you dropped on.
+    const target = nodeAt(w, drag.from);
+    if (target) {
+      const toSide = dropSide(target, e, w);
+      if (!C.edges.some(x => x.from === drag.from && x.to === target.id && x.fromSide === drag.side && x.toSide === toSide)) {
+        checkpoint();
+        const ed = {id:uid(), from:drag.from, to:target.id, fromSide:drag.side, toSide, kind:'default', label:'', conds:[], note:''};
+        C.edges.push(ed); sel = {kind:'edge', id:ed.id}; renderInspector();
+      }
+    }
+  } else if (drag.mode === 'reattach') {
+    // Moves one end of a link to any side of any box (other than the box at its far end).
+    const ed = getEdge(drag.eid), target = nodeAt(w, linkAnchorId());
+    if (ed && target) {
+      checkpoint();
+      ed[drag.end] = target.id; ed[drag.end + 'Side'] = dropSide(target, e, w);
+      renderInspector();
+    }
+  }
+  document.body.classList.remove('connecting');
+  const changed = drag.moved || drag.mode === 'connect' || drag.mode === 'reattach';
+  drag = null; vp.classList.remove('panning');
+  renderCanvas();
+  if (changed) { save(); if (sel.kind === 'node') renderInspector(); }
+}
+vp.addEventListener('pointerup', endDrag);
+vp.addEventListener('pointercancel', endDrag);
+
+function zoomAt(cx, cy, z) {
+  const zin = z > view.z;
+  z = subMode === 'zoom' ? clamp(z, .08, 10) : clamp(z, .2, 4);
+  const r = vp.getBoundingClientRect(), px = cx - r.left, py = cy - r.top;
+  const wx = (px - view.x) / view.z, wy = (py - view.y) / view.z;
+  view.z = z; view.x = px - wx * z; view.y = py - wy * z; applyView();
+  if (subMode === 'zoom') autoNav(zin);
+}
+
+/* ---------- zoom to open ----------
+   Zooming in on a sub-flow box fades its miniature in; once the box fills most of the screen you
+   are moved inside, with the camera placed so the inner boxes sit exactly where the miniature
+   showed them. */
+// Camera for the inside of sub-flow g that lines its content up with g's miniature on screen.
+function zoomInView(g) {
+  const b = contentBox(g.sub), p = previewRect(g), s = Math.min(p.w / b.w, p.h / b.h);
+  const fx = p.x + (p.w - b.w * s) / 2, fy = p.y + (p.h - b.h * s) / 2, z = s * view.z;
+  return {z, x: fx * view.z + view.x - b.x * z, y: fy * view.z + view.y - b.y * z};
+}
+function autoNav(zoomingIn) {
+  const r = vp.getBoundingClientRect();
+  if (zoomingIn) {
+    const c = toWorld(r.left + r.width/2, r.top + r.height/2);
+    let g = null;
+    for (const n of C.nodes) if (n.sub && c.x >= n.x && c.x <= n.x + n.w && c.y >= n.y && c.y <= n.y + n.h && (!g || area(n) < area(g))) g = n;
+    if (g && (g.w * view.z >= r.width * .8 || g.h * view.z >= r.height * .8)) enterSub(g.id, zoomInView(g));
+  }
+  // Zooming out never leaves a sub-flow, so you can pull back to see all of it.
+  // Leave with the Up button or the Overview › … bar, or Backspace.
+}
+vp.addEventListener('wheel', e => { e.preventDefault(); zoomAt(e.clientX, e.clientY, view.z * Math.exp(-e.deltaY * (e.deltaMode ? 0.05 : 0.0015))); }, {passive:false});
+const zoomCenter = f => { const r = vp.getBoundingClientRect(); zoomAt(r.left + r.width/2, r.top + r.height/2, view.z * f); };
+$('#zIn').onclick = () => zoomCenter(1.2);
+$('#zOut').onclick = () => zoomCenter(1 / 1.2);
+function fit() {
+  const r = vp.getBoundingClientRect();
+  const ns = viewNodes();
+  if (!ns.length) { view = {x:r.width/2, y:r.height/2, z:1}; return applyView(); }
+  const x0 = Math.min(...ns.map(n => n.x)), y0 = Math.min(...ns.map(n => n.y)) - (path.length ? 56 : 16);
+  const x1 = Math.max(...ns.map(n => n.x + n.w)), y1 = Math.max(...ns.map(n => n.y + n.h));
+  const pad = 48, z = clamp(Math.min((r.width - pad*2) / (x1 - x0), (r.height - pad*2) / (y1 - y0)), .25, 1.2);
+  view = {z, x:(r.width - (x1 - x0) * z) / 2 - x0 * z, y:(r.height - (y1 - y0) * z) / 2 - y0 * z};
+  applyView();
+}
+$('#zFit').onclick = fit;
+$('#detail').addEventListener('change', e => {
+  detail = e.target.value === 'compact' ? 'compact' : 'full';
+  try { localStorage.setItem(DETAIL_KEY, detail); } catch {}
+  renderAll(); focusCanvas();
+});
+/* ---------- spacing pad ----------
+   Taller / shorter change the gaps between ROWS; wider / narrower the gaps between COLUMNS.
+   Boxes whose vertical extents overlap form one row (likewise columns); each click adds or removes
+   STEP px in every gap between neighbouring rows, never squeezing a gap below MIN_GAP. So rows stay
+   exactly aligned, every click visibly changes something, and boxes can never end up overlapping.
+   The row holding the selected box stays put (else the row nearest the middle), so the view doesn't
+   jump. Box sizes never change; frames stretch or shrink with the rows inside them. */
+const STEP = 24, MIN_GAP = 32, PIN_W = 208, PIN_H = 60;
+const spacingBase = {};   // per level: layout before your first spacing click, for the reset button
+const levelKey = () => path.join('/');
+const layoutJSON = () => JSON.stringify([C.nodes.map(n => [n.id, n.x, n.y, n.w, n.h]), C.pins || null, linkSpread()]);
+const takeSpacingBase = key => { spacingBase[key] = snapshotLayout(); };
+// Plan one click. Returns {shift: key -> px} or {none:'one'} (a single row/column) or {none:'tight'}.
+function planSpacing(axis, grow) {
+  const P = axis === 'x' ? 'x' : 'y', S = axis === 'x' ? 'w' : 'h';
+  const items = C.nodes.filter(n => !isFrame(n)).map(n => ({key:n.id, s:n[P], e:n[P] + n[S]}))
+    .concat(Object.entries(C.pins || {}).map(([k, p]) => ({key:'pin:' + k, s:p[P], e:p[P] + (axis === 'x' ? PIN_W : PIN_H)})))
+    .sort((a, b) => a.s - b.s);
+  const bands = [];
+  for (const it of items) {
+    const b = bands[bands.length - 1];
+    if (b && it.s < b.e) { b.keys.push(it.key); b.e = Math.max(b.e, it.e); }
+    else bands.push({s:it.s, e:it.e, keys:[it.key]});
+  }
+  if (bands.length < 2) return {none:'one'};
+  const gaps = bands.slice(1).map((b, i) => b.s - bands[i].e);
+  const next = gaps.map(g => grow ? g + STEP : g > MIN_GAP ? Math.max(MIN_GAP, g - STEP) : g);
+  if (next.every((g, i) => g === gaps[i])) return {none:'tight'};
+  // Anchor: the band holding the selected box, else the band nearest the middle of the level.
+  let a = sel.kind === 'node' ? bands.findIndex(b => b.keys.includes(sel.id)) : -1;
+  if (a < 0) {
+    const mid = (bands[0].s + bands[bands.length - 1].e) / 2;
+    a = bands.reduce((best, b, i) => Math.abs((b.s + b.e) / 2 - mid) < Math.abs((bands[best].s + bands[best].e) / 2 - mid) ? i : best, 0);
+  }
+  const bandShift = bands.map(() => 0);
+  for (let i = a + 1; i < bands.length; i++) bandShift[i] = bandShift[i - 1] + (next[i - 1] - gaps[i - 1]);
+  for (let i = a - 1; i >= 0; i--) bandShift[i] = bandShift[i + 1] - (next[i] - gaps[i]);
+  const shift = {};
+  bands.forEach((b, i) => b.keys.forEach(k => shift[k] = bandShift[i]));
+  // Where would a point on this axis move? (used for frames: they follow the rows inside them)
+  const shiftAt = v => { let best = 0, d = Infinity; bands.forEach((b, i) => { const dd = v < b.s ? b.s - v : v > b.e ? v - b.e : 0; if (dd < d) { d = dd; best = i; } }); return bandShift[best]; };
+  return {shift, shiftAt, P, S};
+}
+function adjustSpacing(axis, grow, startOfPress = true) {
+  if (!C.nodes.length) return 'one';
+  const plan = planSpacing(axis, grow);
+  if (plan.none === 'one') return adjustLinkSpread(axis, grow, startOfPress);
+  if (plan.none) return plan.none;
+  const {shift, shiftAt, P, S} = plan, key = levelKey(), before = layoutJSON();
+  if (startOfPress) checkpoint();
+  if (!spacingBase[key] || spacingBase[key].stamp !== before) takeSpacingBase(key);
+  // Frames first, measured from the boxes they contain before anything moves: the top edge follows
+  // the top-most box inside, the bottom edge the bottom-most (so the frame's padding is kept).
+  const frameEdges = C.nodes.filter(isFrame).map(g => {
+    const ks = descendants(g).filter(k => !isFrame(k));
+    if (!ks.length) { const d = shiftAt(g[P] + g[S] / 2); return [g, d, d]; }
+    const top = ks.reduce((m, k) => k[P] < m[P] ? k : m), bot = ks.reduce((m, k) => k[P] + k[S] > m[P] + m[S] ? k : m);
+    return [g, shift[top.id] || 0, shift[bot.id] || 0];
+  });
+  for (const [g, d0, d1] of frameEdges) { g[S] = g[S] + d1 - d0; g[P] = g[P] + d0; }
+  for (const n of C.nodes) if (!isFrame(n) && shift[n.id]) n[P] += shift[n.id];
+  for (const [k, p] of Object.entries(C.pins || {})) if (shift['pin:' + k]) p[P] += shift['pin:' + k];
+  spacingBase[key].stamp = layoutJSON();
+  renderCanvas(); save();
+  return true;
+}
+// One row (or one column): there are no gaps between rows to change, so the pad works on the links
+// instead: taller spreads connection points apart, fans side-by-side links and raises arcs; shorter
+// does the reverse. Stored per level as `spread`, so it's saved with the setup.
+function adjustLinkSpread(axis, grow, startOfPress) {
+  if (!C.edges.length) return 'one';
+  const cur = linkSpread(), next = cur[axis] + (grow ? 1 : -1);
+  if (next > SPREAD_MAX) return 'spreadmax';
+  if (next < SPREAD_MIN) return 'spreadmin';
+  const key = levelKey(), before = layoutJSON();
+  if (startOfPress) checkpoint();
+  if (!spacingBase[key] || spacingBase[key].stamp !== before) takeSpacingBase(key);
+  C.spread = {...cur, [axis]: next};
+  spacingBase[key].stamp = layoutJSON();
+  renderCanvas(); save();
+  if (startOfPress) toast(`One ${axis === 'y' ? 'row' : 'column'}: ${grow ? 'spreading the links apart' : 'bringing the links together'} (${next > 0 ? '+' : ''}${next}).`);
+  return true;
+}
+// Reset point. If you saved one for this level (bookmark button), reset always returns to it and it is
+// stored with the canvas. Otherwise reset returns to the layout before your first spacing click, and
+// only while nothing else has changed since (session only; Ctrl+Z still works).
+const snapshotLayout = () => ({nodes: Object.fromEntries(C.nodes.map(n => [n.id, {x:n.x, y:n.y, w:n.w, h:n.h}])), pins: JSON.parse(JSON.stringify(C.pins || {})), spread: linkSpread()});
+// True when the level already matches snapshot `s` (boxes added since the snapshot are ignored).
+function matchesSnapshot(s) {
+  const now = snapshotLayout();
+  for (const [id, r] of Object.entries(s.nodes)) { const n = now.nodes[id]; if (n && (n.x !== r.x || n.y !== r.y || n.w !== r.w || n.h !== r.h)) return false; }
+  for (const [k, p] of Object.entries(s.pins || {})) { const q = now.pins[k]; if (q && (q.x !== p.x || q.y !== p.y)) return false; }
+  return now.spread.x === s.spread.x && now.spread.y === s.spread.y;
+}
+const canResetSpacing = () => {
+  if (C.resetPoint) return !matchesSnapshot(C.resetPoint);
+  const b = spacingBase[levelKey()]; return !!b && b.stamp === layoutJSON();
+};
+function applySnapshot(s) {
+  for (const n of C.nodes) if (s.nodes[n.id]) Object.assign(n, s.nodes[n.id]);
+  if (C.pins) for (const [k, p] of Object.entries(s.pins || {})) if (C.pins[k]) C.pins[k] = {...p};
+  C.spread = {...s.spread};
+}
+function resetSpacing() {
+  if (!canResetSpacing()) return;
+  checkpoint();
+  if (C.resetPoint) applySnapshot(C.resetPoint);
+  else { applySnapshot(spacingBase[levelKey()]); delete spacingBase[levelKey()]; }
+  renderCanvas(); save();
+  toast(C.resetPoint ? 'Back to your saved reset point.' : 'Spacing reset.');
+}
+function saveResetPoint() {
+  checkpoint();
+  C.resetPoint = snapshotLayout();
+  delete spacingBase[levelKey()];
+  renderCanvas(); save();
+  toast(`Reset point saved for ${curGroup ? '“' + (curGroup.name || 'this sub-flow') + '”' : 'the overview'}. ↺ now returns here.`);
+}
+function updateSpacingUI() {
+  const m = $('#spMid'); if (!m) return;
+  m.disabled = !canResetSpacing();
+  m.title = C.resetPoint ? 'Reset to your saved reset point' : 'Reset spacing on this level';
+  const s = $('#spSave');
+  s.classList.toggle('on', !!C.resetPoint);
+  s.title = C.resetPoint ? 'Update this level’s reset point to the current layout' : 'Save the current layout as this level’s reset point';
+}
+// Collapse the pad into a small button in the zoom bar (remembered per viewer).
+const PAD_KEY = KEY + '-spacing-collapsed';
+function setPadCollapsed(on) {
+  $('#spacing').hidden = on; $('#spOpen').hidden = !on;
+  try { localStorage.setItem(PAD_KEY, on ? '1' : ''); } catch {}
+}
+$('#spOpen').onclick = () => { setPadCollapsed(false); focusCanvas(); };
+try { if (localStorage.getItem(PAD_KEY)) setPadCollapsed(true); } catch {}
+// Non-arrow pad buttons: reset, save reset point, collapse.
+function padAction(b) {
+  const a = b.dataset.sp;
+  if (a === 'reset') { resetSpacing(); return true; }
+  if (a === 'savept') { saveResetPoint(); return true; }
+  if (a === 'fold') { setPadCollapsed(true); $('#spOpen').focus(); return true; }
+  return false;
+}
+const SPACING_ACTS = {up:['y', true], down:['y', false], right:['x', true], left:['x', false]};
+// A click that can't change anything shakes the button and says why.
+function spacingRefused(btn, why, axis) {
+  btn?.classList.remove('nope'); void btn?.offsetWidth; btn?.classList.add('nope');
+  clearTimeout(btn?._nopeT); if (btn) btn._nopeT = setTimeout(() => btn.classList.remove('nope'), 700);
+  const rows = axis === 'y' ? 'rows' : 'columns';
+  toast(why === 'one' ? `Everything here is in one ${axis === 'y' ? 'row' : 'column'} with no links, so there’s nothing to space ${axis === 'y' ? 'vertically' : 'horizontally'}.`
+    : why === 'spreadmax' ? 'The links are as spread out as they can go.'
+    : why === 'spreadmin' ? 'The links are as close together as they can go.'
+    : `The ${rows} are as close as they can go.`);
+}
+function spacingStep(btn, sp, startOfPress) {
+  const [axis, grow] = SPACING_ACTS[sp], r = adjustSpacing(axis, grow, startOfPress);
+  if (r !== true) spacingRefused(btn, r, axis);
+  return r === true;
+}
+// Click for one step; hold to keep going.
+let spHold = null;
+$('#spacing').addEventListener('pointerdown', e => {
+  const b = e.target.closest('button'); if (!b || b.disabled) return;
+  e.preventDefault();
+  if (padAction(b)) return;
+  focusCanvas();
+  if (!spacingStep(b, b.dataset.sp, true)) return;
+  const stop = () => { clearTimeout(spHold?.t); clearInterval(spHold?.i); spHold = null; };
+  stop();
+  spHold = {t: setTimeout(() => { spHold.i = setInterval(() => { if (!spacingStep(b, b.dataset.sp, false)) stop(); }, 110); }, 380)};
+  b.addEventListener('pointerup', stop, {once:true});
+  b.addEventListener('pointerleave', stop, {once:true});
+});
+$('#spacing').addEventListener('keydown', e => {   // Enter / Space on a focused pad button
+  const b = e.target.closest('button'); if (!b || (e.key !== 'Enter' && e.key !== ' ')) return;
+  e.preventDefault();
+  if (padAction(b)) return;
+  spacingStep(b, b.dataset.sp, true);
+});
+/* ---------- side panels: resize and hide ----------
+   Drag the divider on a panel's inner edge (or focus it and use ← →) to resize; double-click it for
+   the default width. « / » hide a panel; a tab on the canvas edge brings it back. Widths and hidden
+   state are per-viewer preferences, kept in browser storage. Phones keep their own stacked layout. */
+const PANELS_KEY = KEY + '-panels';
+const PANEL = {
+  l: {def:176, min:140, max:380, el:'#palette', show:'#showL', split:'#splitL', v:'--lw'},
+  r: {def:330, min:260, max:600, el:'#rightPanel', show:'#showR', split:'#splitR', v:'--rw'},
+};
+let panels = (() => { try { return JSON.parse(localStorage.getItem(PANELS_KEY)) || {}; } catch { return {}; } })();
+const wideScreen = matchMedia('(min-width: 821px)');
+const panelW = s => clamp(+(panels[s]?.w) || PANEL[s].def, PANEL[s].min, PANEL[s].max);
+const shownW = s => panels[s]?.hidden && wideScreen.matches ? 0 : panelW(s);
+function applyPanels() {
+  for (const [s, P] of Object.entries(PANEL)) {
+    const hide = !!panels[s]?.hidden && wideScreen.matches;
+    $('#app').style.setProperty(P.v, (hide ? 0 : panelW(s)) + 'px');
+    $(P.el).hidden = hide; $(P.show).hidden = !hide; $(P.split).hidden = hide;
+    $(P.split).setAttribute('aria-valuenow', panelW(s));
+  }
+}
+function savePanels() { try { localStorage.setItem(PANELS_KEY, JSON.stringify(panels)); } catch {} }
+// Change the left panel's on-screen width and shift the camera by the same amount, so the diagram
+// stays where it is on screen instead of sliding with the canvas edge.
+function withLeftEdgeKept(fn) {
+  const before = shownW('l'); fn(); const after = shownW('l');
+  if (after !== before) { view.x -= after - before; applyView(); }
+}
+function resizePanel(s, w) {
+  const P = PANEL[s], other = s === 'l' ? 'r' : 'l';
+  const roomy = Math.max(P.min, Math.min(P.max, window.innerWidth - shownW(other) - 360));   // keep at least 360px of canvas
+  withLeftEdgeKept(() => { panels[s] = {...panels[s], w: Math.round(clamp(w, P.min, roomy))}; applyPanels(); });
+}
+function setPanelHidden(s, hidden) {
+  withLeftEdgeKept(() => { panels[s] = {...panels[s], hidden}; applyPanels(); });
+  savePanels();
+  (hidden ? $(PANEL[s].show) : $(s === 'l' ? '#hideL' : '#hideR')).focus();
+}
+for (const s of ['l', 'r']) {
+  const sp = $(PANEL[s].split), dir = s === 'l' ? 1 : -1;
+  sp.addEventListener('pointerdown', e => {
+    e.preventDefault(); sp.setPointerCapture(e.pointerId); sp.classList.add('dragging');
+    const x0 = e.clientX, w0 = panelW(s);
+    const mv = ev => resizePanel(s, w0 + (ev.clientX - x0) * dir);
+    const up = () => { sp.classList.remove('dragging'); sp.removeEventListener('pointermove', mv); savePanels(); };
+    sp.addEventListener('pointermove', mv);
+    sp.addEventListener('pointerup', up, {once:true}); sp.addEventListener('pointercancel', up, {once:true});
+  });
+  sp.addEventListener('dblclick', () => { resizePanel(s, PANEL[s].def); savePanels(); });
+  sp.addEventListener('keydown', e => {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' || e.altKey) return;
+    e.preventDefault(); e.stopPropagation();
+    resizePanel(s, panelW(s) + (e.key === 'ArrowRight' ? 16 : -16) * dir); savePanels();
+  });
+}
+$('#hideL').onclick = () => setPanelHidden('l', true);
+$('#hideR').onclick = () => setPanelHidden('r', true);
+$('#showL').onclick = () => setPanelHidden('l', false);
+$('#showR').onclick = () => setPanelHidden('r', false);
+wideScreen.addEventListener('change', applyPanels);
+applyPanels();
+$('#hintsBtn').onclick = e => { const open = $('#hints').classList.toggle('open'); e.currentTarget.setAttribute('aria-expanded', open); e.currentTarget.textContent = open ? '× Tips' : '? Tips'; };
+$('#subMode').addEventListener('change', e => {
+  subMode = e.target.value === 'zoom' ? 'zoom' : 'drill';
+  try { localStorage.setItem(MODE_KEY, subMode); } catch {}
+  renderAll(); focusCanvas();
+  toast(subMode === 'zoom' ? 'Zoom in on a sub-flow (or double-click it) to open it. Use Up to leave.' : 'Double-click a sub-flow to open it.');
+});
+
+/* ---------- pointer: palette ---------- */
+const palInfo = t => t === 'subflow' ? SUBFLOW : TYPES[t];
+const palColor = t => t === 'subflow' ? 'group' : t;
+const item = t => `<button class="item" data-type="${t}" style="--tc:var(--t-${palColor(t)})" title="${palInfo(t).hint}"><i class="g g-${t}"></i><b>${palInfo(t).label}</b><small>${palInfo(t).hint}</small></button>`;
+$('#pBuild').innerHTML = BUILD.map(item).join('');
+$('#pNote').innerHTML = ['note','group','subflow'].map(item).join('');
+$('#palette').addEventListener('pointerdown', e => {
+  const it = e.target.closest('[data-type]'); if (!it) return;
+  e.preventDefault();
+  const type = it.dataset.type, sx = e.clientX, sy = e.clientY; let ghost = null;
+  const mv = ev => {
+    if (!ghost && Math.hypot(ev.clientX - sx, ev.clientY - sy) < 5) return;
+    if (!ghost) { ghost = document.createElement('div'); ghost.className = 'ghost'; ghost.textContent = palInfo(type).label; ghost.style.setProperty('--tc', `var(--t-${palColor(type)})`); document.body.append(ghost); }
+    ghost.style.left = ev.clientX + 'px'; ghost.style.top = ev.clientY + 'px';
+  };
+  const up = ev => {
+    window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up);
+    focusCanvas();   // so Delete works on the box just added
+    const r = vp.getBoundingClientRect();
+    if (ghost) {
+      ghost.remove();
+      if (ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom) addNode(type, toWorld(ev.clientX, ev.clientY));
+    } else addNode(type, toWorld(r.left + r.width/2 + (Math.random() - .5) * 60, r.top + r.height/2 + (Math.random() - .5) * 60));
+  };
+  window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up);
+});
+
+/* ---------- toolbar ---------- */
+const title = $('#title');
+title.addEventListener('focus', checkpoint);
+title.addEventListener('input', () => { state.name = title.value; save(); });
+title.addEventListener('keydown', e => { if (e.key === 'Enter') title.blur(); });
+$('#bUndo').onclick = () => restore(undo, redo);
+$('#bRedo').onclick = () => restore(redo, undo);
+$('#bRules').onclick = () => { select(null, null); renderCanvas(); document.body.classList.add('insp-open'); };
+$('#bInsp').onclick = () => document.body.classList.toggle('insp-open');
+let newArm = 0;
+$('#bNew').onclick = e => {
+  const b = e.currentTarget;
+  if (Date.now() - newArm > 3000) { newArm = Date.now(); b.textContent = 'Click again to clear'; b.classList.add('warn'); setTimeout(() => { b.textContent = 'New canvas'; b.classList.remove('warn'); }, 3000); return; }
+  newArm = 0; b.textContent = 'New canvas'; b.classList.remove('warn');
+  checkpoint(); path = []; state = {name:'Untitled canvas', notes:'', nodes:[], edges:[], rules:[]}; sel = {kind:null, id:null};
+  renderAll(); fit(); save();
+};
+const modal = $('#modal'), mMsg = $('#mMsg');
+$('#bJson').onclick = () => { $('#mText').value = JSON.stringify(state, null, 2); mMsg.textContent = ''; modal.hidden = false; };
+$('#mClose').onclick = () => modal.hidden = true;
+modal.addEventListener('pointerdown', e => { if (e.target === modal) modal.hidden = true; });
+$('#mCopy').onclick = async () => {
+  const ta = $('#mText');
+  try { await navigator.clipboard.writeText(ta.value); mMsg.textContent = 'Copied to clipboard.'; }
+  catch { ta.select(); mMsg.textContent = 'Text selected. Press Ctrl+C to copy.'; }
+};
+$('#bEx').onchange = e => { const v = e.target.value; e.target.value = ''; if (!v) return; checkpoint(); path = []; state = v === 'minimal' ? minimalSample() : sample(); sel = {kind:null, id:null}; renderAll(); fit(); save(); focusCanvas(); };
+$('#mLoad').onclick = () => {
+  try { const s = normalize(JSON.parse($('#mText').value)); checkpoint(); path = []; state = s; sel = {kind:null, id:null}; renderAll(); fit(); save(); modal.hidden = true; }
+  catch (err) { mMsg.textContent = 'Could not load: ' + (err.message || 'invalid JSON') + ' Check the text and try again.'; }
+};
+
+/* ---------- saved setups ----------
+   Kept in this artifact's database (collection "setups", one document per setup) so they survive
+   cleared browsers and other devices. Where that isn't available (e.g. a local copy of the file)
+   they fall back to this browser's storage, and the Setups window says so. */
+const LOCAL_SETUPS = 'agent-flow-setups-v1';
+let setupsCol = null, setups = [], setupsMode = 'loading';
+const sModal = $('#sModal'), sMsg = $('#sMsg'), toastEl = $('#toast');
+let toastT;
+function toast(msg) { toastEl.textContent = msg; toastEl.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => toastEl.hidden = true, 2600); }
+const readLocal = () => { try { return JSON.parse(localStorage.getItem(LOCAL_SETUPS)) || []; } catch { return []; } };
+const writeLocal = list => { try { localStorage.setItem(LOCAL_SETUPS, JSON.stringify(list)); } catch {} };
+const sortSetups = () => setups.sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
+
+async function initSetups() {
+  let db = null;
+  try { db = window.claude?.use ? await window.claude.use('db') : null; } catch {}
+  if (!db) { setupsMode = 'local'; setups = readLocal(); sortSetups(); renderSetups(); return checkNewer(); }
+  setupsCol = db.collection('setups'); setupsMode = 'db';
+  setupsCol.onSnapshot(snap => {
+    setups = snap.docs.map(d => ({id:d.id, ...d.data()})); sortSetups(); renderSetups(); checkNewer();
+  }, err => { setupsMode = 'error'; sMsg.textContent = 'Saved setups stopped loading (' + err.code + '). Reload the page to try again.'; renderSetups(); });
+}
+
+function saveError(err) {
+  const c = err?.code;
+  return c === 'quota_exceeded' ? 'Storage is full. Delete a few old setups, then save again.'
+    : c === 'invalid_argument' ? 'Couldn\'t save: this setup is over the 256 KB limit, or you only have view access.'
+    : 'Couldn\'t save right now. Try again in a moment.';
+}
+// Writes the current canvas as setup `id` (new id when saving as new). The setup's name is the canvas name.
+async function writeSetup(id, name) {
+  const canvas = JSON.parse(JSON.stringify(state)); delete canvas.setupId; delete canvas.setupSavedAt;
+  canvas.name = name;
+  const body = {name, savedAt:Date.now(), boxes:countAll(state.nodes), links:state.edges.length, canvas};
+  // Record which version this copy is before writing, so our own save never looks "newer" to us.
+  const prev = [state.setupId, state.setupSavedAt];
+  state.setupId = id; state.setupSavedAt = body.savedAt;
+  try {
+    if (setupsMode === 'db') await setupsCol.doc(id).set(body);
+    else if (setupsMode === 'local') { const list = readLocal().filter(s => s.id !== id); list.push({id, ...body}); writeLocal(list); setups = list; sortSetups(); renderSetups(); }
+    else throw {code:'unavailable'};
+  } catch (err) { [state.setupId, state.setupSavedAt] = prev; throw err; }
+  state.name = name; title.value = name; save(); checkNewer();
+}
+async function quickSave() {
+  const cur = state.setupId && setups.find(s => s.id === state.setupId);
+  if (!cur) return openSetups(true);
+  if (newerCopy()) { checkNewer(); return toast('A newer version of this setup was saved. Choose Load latest or Keep mine first.'); }
+  try { await writeSetup(cur.id, state.name.trim() || cur.name); toast(`Saved “${state.name}”`); renderSetups(); }
+  catch (err) { toast(saveError(err)); }
+}
+/* ---------- newer saved version ----------
+   The canvas on screen is this browser's working copy. If the setup it came from has since been saved
+   elsewhere (another device, or Claude editing it), say so and offer to load it, instead of quietly
+   showing the older copy and letting Save overwrite the newer one. */
+const canvasKey = o => { const c = normalize(JSON.parse(JSON.stringify(o))); delete c.setupId; delete c.setupSavedAt; c.name = ''; return JSON.stringify(c); };
+function newerCopy() {
+  const cur = state.setupId && setups.find(s => s.id === state.setupId);
+  if (!cur || !cur.canvas || (cur.savedAt || 0) <= (state.setupSavedAt || 0)) return null;
+  // Same content (e.g. a copy saved before this check existed): just note the version, no prompt.
+  try { if (canvasKey(cur.canvas) === canvasKey(state)) { state.setupSavedAt = cur.savedAt; save(); return null; } } catch {}
+  return cur;
+}
+function checkNewer() {
+  const cur = newerCopy(), bar = $('#newer');
+  bar.hidden = !cur;
+  if (cur) $('#newerWhen').textContent = new Date(cur.savedAt).toLocaleString([], {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
+}
+function openSetup(s) {
+  try { checkpoint(); path = []; state = normalize({...s.canvas, setupId:s.id, setupSavedAt:s.savedAt}); }
+  catch { toast('That setup couldn’t be read. It may be damaged.'); return false; }
+  sel = {kind:null, id:null}; renderAll(); fit(); save(); focusCanvas(); checkNewer();
+  return true;
+}
+$('#newerLoad').onclick = () => { const cur = newerCopy(); if (cur && openSetup(cur)) toast(`Loaded the latest “${cur.name}”. Ctrl+Z brings back your copy.`); };
+$('#newerKeep').onclick = () => {
+  const cur = state.setupId && setups.find(s => s.id === state.setupId);
+  if (cur) { state.setupSavedAt = cur.savedAt; save(); }
+  checkNewer(); toast('Keeping your copy. Pressing Save will replace the newer version.');
+};
+function openSetups(focusName) {
+  sMsg.textContent = ''; $('#sName').value = state.setupId ? '' : (state.name === 'Untitled canvas' ? '' : state.name);
+  renderSetups(); sModal.hidden = false;
+  if (focusName) setTimeout(() => $('#sName').focus(), 0);
+}
+function renderSetups() {
+  $('#sWhere').textContent = setupsMode === 'db' ? 'Setups are saved with this page, so they’re here whenever you come back — on any device.'
+    : setupsMode === 'local' ? 'Setups are saved in this browser only (the page’s shared storage isn’t available here).'
+    : setupsMode === 'loading' ? 'Loading your setups…' : '';
+  const del = sModal.dataset.armed, rescue = readRescue();
+  const rescueRow = rescue ? `<div class="srow cur"><div><b>Unsaved canvas from before</b><span class="pill">Recovered</span></div>
+      <span class="meta">Kept in this browser after it failed to open</span>
+      <div class="acts"><button class="btn primary" data-s="rescue">Open</button><button class="btn danger" data-s="rescue-del">Discard</button></div></div>` : '';
+  $('#sList').innerHTML = rescueRow + (setups.length ? setups.map(s => {
+    const cur = s.id === state.setupId;
+    const when = s.savedAt ? new Date(s.savedAt).toLocaleString([], {day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'}) : '';
+    return `<div class="srow${cur ? ' cur' : ''}"><div><b>${esc(s.name || 'Untitled')}</b>${cur ? '<span class="pill">Open now</span>' : ''}</div>
+      <span class="meta">${+s.boxes || 0} boxes · ${+s.links || 0} links · saved ${esc(when)}</span>
+      <div class="acts">${cur ? `<button class="btn" data-s="over" data-id="${esc(s.id)}">Save changes</button>` : `<button class="btn" data-s="open" data-id="${esc(s.id)}">Open</button>`}
+        <button class="btn ${del === s.id ? 'warn' : 'danger'}" data-s="del" data-id="${esc(s.id)}">${del === s.id ? 'Click again to delete' : 'Delete'}</button></div></div>`;
+  }).join('') : `<p class="help" style="padding:12px 2px">No saved setups yet. Name the current canvas above and save it.</p>`);
+}
+$('#sForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const name = $('#sName').value.trim();
+  if (!name) { sMsg.textContent = 'Give the setup a name first.'; $('#sName').focus(); return; }
+  try { await writeSetup(uid() + uid(), name); sModal.hidden = true; toast(`Saved “${name}”`); }
+  catch (err) { sMsg.textContent = saveError(err); }
+});
+$('#sList').addEventListener('click', async e => {
+  const b = e.target.closest('[data-s]'); if (!b) return;
+  if (b.dataset.s === 'rescue') {
+    try { checkpoint(); path = []; state = normalize(JSON.parse(readRescue())); }
+    catch { sMsg.textContent = 'That canvas still couldn’t be read. Copy it out via JSON and send it to Claude to repair.'; return; }
+    try { localStorage.removeItem(RESCUE_KEY); } catch {}
+    sel = {kind:null, id:null}; renderAll(); fit(); save(); sModal.hidden = true; focusCanvas();
+    toast('Recovered your canvas. Press Save to keep it as a setup.'); return;
+  }
+  if (b.dataset.s === 'rescue-del') { try { localStorage.removeItem(RESCUE_KEY); } catch {} renderSetups(); return; }
+  const s = setups.find(x => x.id === b.dataset.id); if (!s) return;
+  if (b.dataset.s === 'open') {
+    if (!openSetup(s)) { sMsg.textContent = 'That setup couldn’t be read. It may be damaged.'; return; }
+    sModal.hidden = true; toast(`Opened “${s.name}”`);
+  } else if (b.dataset.s === 'over') {
+    try { await writeSetup(s.id, state.name.trim() || s.name); toast(`Saved “${state.name}”`); renderSetups(); }
+    catch (err) { sMsg.textContent = saveError(err); }
+  } else if (b.dataset.s === 'del') {
+    if (sModal.dataset.armed !== s.id) { sModal.dataset.armed = s.id; renderSetups(); setTimeout(() => { if (sModal.dataset.armed === s.id) { delete sModal.dataset.armed; renderSetups(); } }, 3000); return; }
+    delete sModal.dataset.armed;
+    try {
+      if (setupsMode === 'db') await setupsCol.doc(s.id).delete();
+      else { setups = readLocal().filter(x => x.id !== s.id); writeLocal(setups); sortSetups(); }
+      if (state.setupId === s.id) { state.setupId = ''; save(); }
+      renderSetups(); toast(`Deleted “${s.name}”`);
+    } catch { sMsg.textContent = 'Couldn’t delete that setup. Try again.'; }
+  }
+});
+$('#bSave').onclick = quickSave;
+$('#bSetups').onclick = () => openSetups(false);
+$('#sClose').onclick = () => sModal.hidden = true;
+sModal.addEventListener('pointerdown', e => { if (e.target === sModal) sModal.hidden = true; });
+initSetups();
+if (loadFailed) setTimeout(() => openSetups(false), 400);
+
+/* ---------- comments: pins that follow boxes, and Ctrl-click multi-select ----------
+   While the claude.ai comment mode is on, the page (not the viewer) decides what a click comments on:
+   - click a box, frame title or link: comment on that one thing;
+   - Ctrl/⌘ (or Shift) + click several: they're collected, then "Comment on these" (or Enter) opens
+     one comment for all of them;
+   - click empty canvas: comment on that spot (drag still pans).
+   Each comment is anchored by name, e.g. "Fresh worker + Current worker · in Worker Thread [slot|fw,cw]":
+   readable text for people and Claude, and the ids in brackets let the page put the pin back on the
+   right box on the right level, wherever you pan or zoom. Older comments pinned to a screen position
+   stay listed in the claude.ai comment panel. */
+var cctl = null, commentMode = false, cthreads = [], csel = [], composing = false;   // var: read by renders that can run before this line
+const levelTag = () => path.join('/') || '-';
+const utf8 = new TextEncoder(), byteLen = s => utf8.encode(s).length;
+const cleanText = s => String(s).replace(/[\u0000-\u001f\u007f-\u009f\u00ad\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff\[\]|]/g, ' ').replace(/\s+/g, ' ').trim();
+function itemName(it) {
+  if (it.kind === 'e') {
+    const e = getEdge(it.id); if (!e) return 'link';
+    return e.label ? `link “${e.label}”` : `link ${getNode(e.from)?.name || '?'} → ${getNode(e.to)?.name || '?'}`;
+  }
+  const n = getNode(it.id); return n ? (n.name || (n.sub ? 'Sub-flow' : TYPES[n.type]?.label) || 'box') : 'box';
+}
+const itemKey = it => (it.kind === 'e' ? '~' : '') + it.id;
+// Anchor names must fit in 128 bytes: the id tag is kept whole; names shrink ("+ N more") to fit.
+function anchorName(items) {
+  const tag = ` [${levelTag()}|${items.map(itemKey).join(',')}]`;
+  const where = curGroup ? ` · in ${cleanText(curGroup.name || 'sub-flow').slice(0, 24)}` : '';
+  const names = items.map(it => cleanText(itemName(it)).slice(0, 26).trim() || 'box');
+  for (let k = names.length; k >= 1; k--) {
+    const s = names.slice(0, k).join(' + ') + (k < names.length ? ` + ${names.length - k} more` : '') + where + tag;
+    if (byteLen(s) <= 128) return s;
+  }
+  const s = names[0].slice(0, 10) + tag;
+  return byteLen(s) <= 128 ? s : null;
+}
+function parseAnchor(a) {
+  const m = /\[([^|\]]+)\|([^\]]+)\]$/.exec(a || ''); if (!m) return null;
+  if (m[2].startsWith('@')) { const [x, y] = m[2].slice(1).split(',').map(Number); return {lvl:m[1], point:{x, y}}; }
+  return {lvl:m[1], items: m[2].split(',').map(k => k.startsWith('~') ? {kind:'e', id:k.slice(1)} : {kind:'n', id:k})};
+}
+function elementFor(it) {
+  const q = CSS.escape(it.id);
+  return it.kind === 'e' ? (document.querySelector(`.elabel[data-eid="${q}"]`) || document.querySelector(`path.e[data-e="${q}"]`))
+    : (document.querySelector(`#nodes .node[data-id="${q}"]`) || document.querySelector(`#groups .node[data-id="${q}"] .ghead`));
+}
+// Selection and active-thread outlines. Classes are applied to the rendered DOM after every render.
+function applyCommentMarks() {
+  document.querySelectorAll('.csel, .chl').forEach(el => el.classList.remove('csel', 'chl'));
+  if (!cctl) return;
+  for (const it of csel) { const el = elementFor(it); el?.closest('.node, .elabel, path')?.classList.add('csel'); if (it.kind === 'e') document.querySelector(`path.e[data-e="${CSS.escape(it.id)}"]`)?.classList.add('csel'); }
+  const act = cthreads.find(t => t.active), p = act && parseAnchor(act.anchor);
+  if (p?.items && p.lvl === levelTag()) for (const it of p.items) { const el = elementFor(it); el?.closest('.node, .elabel, path')?.classList.add('chl'); }
+  const bar = $('#cbar');
+  bar.hidden = !(commentMode && csel.length);
+  if (!bar.hidden) $('#cbarText').textContent = `${csel.length} selected: ${csel.map(itemName).join(', ')}`;
+}
+// Tell the shell where each recognised thread's pin goes on the level being shown.
+let pinRaf = 0;
+function schedulePins() { if (!cctl || pinRaf) return; pinRaf = requestAnimationFrame(() => { pinRaf = 0; placePins(); }); }
+function placePins() {
+  if (!cctl) return;
+  const map = {}, lvl = levelTag(), vr = vp.getBoundingClientRect();
+  for (const t of cthreads) {
+    const p = parseAnchor(t.anchor); if (!p || p.lvl !== lvl) continue;
+    let x, y;
+    if (p.point) { x = vr.left + view.x + p.point.x * view.z; y = vr.top + view.y + p.point.y * view.z; }
+    else {
+      const el = p.items.map(elementFor).find(Boolean); if (!el) continue;
+      const r = el.getBoundingClientRect(); x = r.right - 6; y = r.top + 6;
+    }
+    if (x < vr.left || x > vr.right || y < vr.top || y > vr.bottom) continue;   // off screen: listed instead
+    map[t.id] = {x: x + scrollX, y: y + scrollY};
+  }
+  cctl.placed(map);
+}
+async function openComment(items, at) {
+  const name = anchorName(items);
+  if (!name) return toast('Too many items for one comment. Select fewer and try again.');
+  try { await cctl.compose(name, at, {}); }
+  catch (err) { toast(err?.code === 'rate_limited' ? 'Slow down a little, then try again.' : 'Couldn’t open the comment box here.'); }
+}
+function commentPointerDown(e) {
+  focusCanvas();
+  const t = e.target, nodeEl = t.closest('#nodes .node, #groups .ghead')?.closest('.node'), eid = t.closest('[data-eid]')?.dataset.eid;
+  const item = nodeEl ? {kind:'n', id:nodeEl.dataset.id} : eid ? {kind:'e', id:eid} : null;
+  if (item) {
+    e.preventDefault();
+    if (e.ctrlKey || e.metaKey || e.shiftKey) {   // build a multi-selection
+      const i = csel.findIndex(x => x.kind === item.kind && x.id === item.id);
+      if (i >= 0) csel.splice(i, 1);
+      else {
+        if (!anchorName([...csel, item])) return toast('That’s as many items as one comment can hold.');
+        csel.push(item);
+      }
+      return applyCommentMarks();
+    }
+    csel = [item]; applyCommentMarks();
+    return openComment(csel, elementFor(item) || t);
+  }
+  // Empty canvas: drag pans; a click (no drag) comments on that spot.
+  drag = {mode:'pan', sx:e.clientX, sy:e.clientY, vx:view.x, vy:view.y, commentSpot:true};
+  vp.classList.add('panning'); vp.setPointerCapture(e.pointerId); e.preventDefault();
+}
+function commentSpotUp(e) {
+  if (Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) > 4) return;
+  const w = toWorld(e.clientX, e.clientY);
+  csel = []; applyCommentMarks();
+  const tag = ` [${levelTag()}|@${Math.round(w.x)},${Math.round(w.y)}]`;
+  const name = 'Canvas spot' + (curGroup ? ` · in ${cleanText(curGroup.name || 'sub-flow').slice(0, 24)}` : '') + tag;
+  cctl.compose(byteLen(name) <= 128 ? name : 'Canvas spot' + tag, {x: e.pageX, y: e.pageY}, {}).catch(() => {});
+}
+// Shell opened a thread from its list: go to its level and bring its boxes into view.
+function revealThread(id) {
+  const t = cthreads.find(x => x.id === id), p = t && parseAnchor(t.anchor); if (!p) return;
+  const want = p.lvl === '-' ? [] : p.lvl.split('/');
+  if (want.join('/') !== path.join('/')) { path = want; sel = {kind:null, id:null}; renderAll(); if (levelTag() !== p.lvl) return; }
+  const r = vp.getBoundingClientRect();
+  let cx, cy;
+  if (p.point) { cx = p.point.x; cy = p.point.y; }
+  else {
+    const ns = p.items.map(it => it.kind === 'n' ? getNode(it.id) : null).filter(Boolean);
+    if (!ns.length) { fit(); return schedulePins(); }
+    const x0 = Math.min(...ns.map(n => n.x)), x1 = Math.max(...ns.map(n => n.x + n.w)), y0 = Math.min(...ns.map(n => n.y)), y1 = Math.max(...ns.map(n => n.y + n.h));
+    cx = (x0 + x1) / 2; cy = (y0 + y1) / 2;
+  }
+  view.x = r.width / 2 - cx * view.z; view.y = r.height / 2 - cy * view.z; applyView();
+  schedulePins();
+}
+$('#cbarGo').onclick = () => { if (csel.length) openComment(csel, elementFor(csel[0]) || $('#cbar')); };
+$('#cbarClear').onclick = () => { csel = []; applyCommentMarks(); focusCanvas(); };
+(async () => {
+  let cm = null;
+  try { cm = window.claude?.use ? await window.claude.use('comments') : null; } catch {}
+  if (!cm) return;
+  try {
+    cctl = await cm.customAnchors({
+      mode: on => { commentMode = on; document.body.classList.toggle('cmode', on); if (!on) { csel = []; cthreads = []; } applyCommentMarks(); },
+      threads: list => { cthreads = list; applyCommentMarks(); placePins(); },
+      reveal: revealThread,
+      composing: open => { composing = open; if (!open) { csel = []; applyCommentMarks(); } },
+      // Dragging a pin re-anchors its thread to whatever box it's dropped on (or that canvas spot).
+      move: (id, at) => {
+        const el = document.elementFromPoint(at.x - scrollX, at.y - scrollY);
+        const nodeEl = el?.closest('#nodes .node, #groups .ghead')?.closest('.node'), eid = el?.closest('[data-eid]')?.dataset.eid;
+        if (nodeEl || eid) { const it = nodeEl ? {kind:'n', id:nodeEl.dataset.id} : {kind:'e', id:eid}; const a = anchorName([it]); return a ? {anchor:a, at:elementFor(it) || el} : null; }
+        const w = toWorld(at.x - scrollX, at.y - scrollY);
+        return {anchor:`Canvas spot [${levelTag()}|@${Math.round(w.x)},${Math.round(w.y)}]`, at};
+      },
+    });
+    placePins();
+  } catch { cctl = null; }   // not granted here: the shell's own click-to-comment stays in charge
+})();
+
+window.addEventListener('keydown', e => {
+  if (commentMode && cctl && !e.target.matches('input,textarea,select')) {
+    if (e.key === 'Enter' && csel.length && !composing) { e.preventDefault(); return openComment(csel, elementFor(csel[0]) || $('#cbar')); }
+    if (e.key === 'Escape' && csel.length) { e.preventDefault(); csel = []; return applyCommentMarks(); }
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); quickSave(); return; }
+  if (!sModal.hidden && e.key === 'Escape') { sModal.hidden = true; return; }
+  if (!modal.hidden && e.key === 'Escape') { modal.hidden = true; return; }
+  if (e.target.matches('input,textarea,select')) { if (e.key === 'Escape') e.target.blur(); return; }
+  // Alt + arrow keys: taller / shorter / narrower / wider (hold to repeat).
+  if (e.altKey && !e.ctrlKey && !e.metaKey && e.key.startsWith('Arrow')) {
+    e.preventDefault();
+    const sp = {ArrowUp:'up', ArrowDown:'down', ArrowLeft:'left', ArrowRight:'right'}[e.key];
+    const [axis, grow] = SPACING_ACTS[sp], r = adjustSpacing(axis, grow, !e.repeat);
+    if (r !== true && !e.repeat) spacingRefused($(`#spacing [data-sp="${sp}"]`), r, axis);
+    return;
+  }
+  const mod = e.ctrlKey || e.metaKey;
+  if (mod && e.key.toLowerCase() === 'z') { e.preventDefault(); e.shiftKey ? restore(redo, undo) : restore(undo, redo); }
+  else if (mod && e.key.toLowerCase() === 'y') { e.preventDefault(); restore(redo, undo); }
+  else if (mod && e.key.toLowerCase() === 'd') { e.preventDefault(); duplicate(); }
+  else if (e.key === 'Delete' || e.key === 'Backspace') {
+    if (sel.kind) { e.preventDefault(); deleteSelected(); }
+    else if (e.key === 'Backspace' && path.length) { e.preventDefault(); goUp(); }
+  }
+  else if (e.key === 'Escape') { select(null, null); renderCanvas(); }
+});
+
+function renderAll() { resolvePath(); document.body.classList.toggle("zmode", subMode === "zoom"); document.body.classList.toggle("compact", detail === "compact"); $("#subMode").value = subMode; $("#detail").value = detail; title.value = state.name; renderCanvas(); renderInspector(); applyView(); updateUndoBtns(); }
+renderAll();
+requestAnimationFrame(fit);
+})();
+</script>
+
+</body></html>

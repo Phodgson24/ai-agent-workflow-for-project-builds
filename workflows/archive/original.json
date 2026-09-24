@@ -1,0 +1,139 @@
+{
+  "edges": [
+    {
+      "conds": [],
+      "from": "agent",
+      "fromSide": "",
+      "id": "e1",
+      "kind": "default",
+      "label": "reads + edits",
+      "note": "",
+      "to": "repo",
+      "toSide": ""
+    },
+    {
+      "conds": [],
+      "from": "qay23fd",
+      "fromSide": "b",
+      "id": "voe9rpf",
+      "kind": "default",
+      "label": "",
+      "note": "",
+      "to": "agent",
+      "toSide": "t"
+    },
+    {
+      "conds": [],
+      "from": "agent",
+      "fromSide": "l",
+      "id": "8g0vf2u",
+      "kind": "default",
+      "label": "",
+      "note": "",
+      "to": "qay23fd",
+      "toSide": "l"
+    },
+    {
+      "conds": [],
+      "from": "qay23fd",
+      "fromSide": "r",
+      "id": "vmrmj4v",
+      "kind": "default",
+      "label": "",
+      "note": "",
+      "to": "1wzsac0",
+      "toSide": "t"
+    },
+    {
+      "conds": [],
+      "from": "1wzsac0",
+      "fromSide": "t",
+      "id": "07e6vq5",
+      "kind": "conditional",
+      "label": "Worker Agent Replacement",
+      "note": "Replace Worker Agent once it reaches context window and has either finished its task and or finds a safe checkpoint and creates a handoff doc.",
+      "to": "agent",
+      "toSide": "t"
+    },
+    {
+      "conds": [],
+      "from": "qay23fd",
+      "fromSide": "r",
+      "id": "be9yr3i",
+      "kind": "default",
+      "label": "Reads",
+      "note": "",
+      "to": "repo",
+      "toSide": "t"
+    }
+  ],
+  "name": "user agent + project folder",
+  "nodes": [
+    {
+      "comments": [],
+      "desc": "work on project based on instructions from orchestrator agent. when task is complete send output/handoff back to orchestrator agent for it to review and either accept or will send a follow up with instructions for fixes/corrections.",
+      "effort": "high",
+      "h": 160,
+      "id": "agent",
+      "model": "gpt-6-sol",
+      "name": "Worker Agent",
+      "path": "",
+      "provider": "codex",
+      "rules": [],
+      "tags": [
+        "Worker Agent"
+      ],
+      "type": "agent",
+      "w": 208,
+      "x": -112,
+      "y": 88
+    },
+    {
+      "comments": [],
+      "desc": "",
+      "h": 88,
+      "id": "repo",
+      "name": "my-app",
+      "path": "~/code/my-app",
+      "rules": [],
+      "tags": [],
+      "type": "folder",
+      "w": 200,
+      "x": 672,
+      "y": 88
+    },
+    {
+      "comments": [],
+      "desc": "",
+      "effort": "high",
+      "h": 120,
+      "id": "qay23fd",
+      "model": "gpt-6-astra",
+      "name": "Orchestrator / Controller Agent",
+      "path": "",
+      "provider": "codex",
+      "rules": [],
+      "tags": [],
+      "type": "agent",
+      "w": 208,
+      "x": -112,
+      "y": -400
+    },
+    {
+      "comments": [],
+      "desc": "",
+      "h": 296,
+      "id": "1wzsac0",
+      "name": "Worker Thread",
+      "path": "",
+      "rules": [],
+      "tags": [],
+      "type": "group",
+      "w": 424,
+      "x": -176,
+      "y": 16
+    }
+  ],
+  "notes": "",
+  "rules": []
+}
