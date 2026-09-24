@@ -9,7 +9,8 @@
       "label": "task / fix instructions",
       "note": "Fix rounds go to the same worker; its name does not change.",
       "to": "slot",
-      "toSide": "l"
+      "toSide": "l",
+      "badge": "blue"
     },
     {
       "conds": [],
@@ -20,7 +21,8 @@
       "label": "result + handoff doc",
       "note": "",
       "to": "orch",
-      "toSide": "r"
+      "toSide": "r",
+      "badge": "green"
     },
     {
       "conds": [
@@ -33,7 +35,8 @@
       "label": "start fresh worker",
       "note": "Names it: same M, H+1 after a handover or a compacted worker; M+1, H00 for the next milestone (see the Orchestrator rules).",
       "to": "slot",
-      "toSide": "t"
+      "toSide": "t",
+      "badge": "violet"
     },
     {
       "conds": [],
@@ -183,9 +186,11 @@
             "label": "getting full → context full",
             "note": "Codex measures the context (it warns or compacts at its limit). The worker notices quality slipping (repeating work, losing earlier decisions). Either way it goes to \"Context full\", which decides compact vs hand off.",
             "to": "ho",
-            "toSide": ""
+            "toSide": "",
+            "badge": "orange"
           },
           {
+            "badge": "cyan",
             "conds": [],
             "from": "ho",
             "fromSide": "r",
@@ -194,8 +199,7 @@
             "label": "handoff doc",
             "note": "",
             "to": "pin:result",
-            "toSide": "l",
-            "badge": "cyan"
+            "toSide": "l"
           },
           {
             "conds": [],
@@ -245,6 +249,7 @@
             "toSide": "t"
           },
           {
+            "badge": "red",
             "conds": [],
             "from": "ho",
             "fromSide": "",
@@ -253,8 +258,7 @@
             "label": "continue same task (compacted)",
             "note": "After compacting once, the same worker carries on with the same task. Its summary now starts with COMPACTED: 1.",
             "to": "cw",
-            "toSide": "",
-            "badge": "red"
+            "toSide": ""
           }
         ],
         "nodes": [
