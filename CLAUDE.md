@@ -4,7 +4,7 @@ Read `app/docs/HANDOFF.md` first: it covers the user, the code map, setups, test
 
 ## Repo layout
 - `app/`: the HTML app and its docs. `workflows/`: setups exported from the app. Keep the two separate.
-- The repo file `app/agent-flow-sketchpad.html` is the source of truth. It is identical to the live artifact at version 21.
+- The repo file `app/agent-flow-sketchpad.html` is the source of truth. It matches the live artifact as last published from this repo (version 23, match badges).
 
 ## Publishing
 - Edit `app/agent-flow-sketchpad.html`, test it, commit it, then publish with `Artifact` using `url: https://claude.ai/artifact/FAht8ymX9NECxeoieiT26w` and `file_path` set to that file. Omit `capabilities` and `icon`.
