@@ -305,18 +305,15 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-
 #world.focus #nodes .node:not(.rel){opacity:.45}
 .leader{fill:none;stroke:var(--muted);stroke-width:1;stroke-dasharray:2 3}
 
-/* match badges: a "port plug" where a link meets a sub-flow box (level above) or its entry/exit point
-   (inside). Drawn in its own layer above the boxes, and counter-scaled so it stays the same size on
-   screen at any zoom. The plug's arrow shows the flow direction; the strip lights up the box edge. */
+/* match badges: a lit strip along the box edge where a link meets a sub-flow box (level above) or its
+   entry/exit point (inside), with the end of the link in the same colour. Drawn in its own layer above
+   the boxes, and counter-scaled so it stays the same size on screen at any zoom. */
 :root{--b-red:#D93A3A;--b-orange:#E07B16;--b-yellow:#D4A514;--b-green:#2F9E44;--b-cyan:#0EA5C6;--b-blue:#3B6FE0;--b-violet:#8B5CF6;--b-pink:#DB4FA0}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--b-red:#F26060;--b-orange:#F59A3C;--b-yellow:#EAC23A;--b-green:#4CC265;--b-cyan:#2EC4E4;--b-blue:#6A93F5;--b-violet:#A78BFA;--b-pink:#F07BBE}}
 :root[data-theme="dark"]{--b-red:#F26060;--b-orange:#F59A3C;--b-yellow:#EAC23A;--b-green:#4CC265;--b-cyan:#2EC4E4;--b-blue:#6A93F5;--b-violet:#A78BFA;--b-pink:#F07BBE}
 #badges{position:absolute;left:0;top:0;pointer-events:none;z-index:4}   /* above boxes and their link handles; clicks pass through */
 .bsock{position:absolute;width:0;height:0;transform:rotate(var(--a)) scale(calc(1 / var(--z,1)));transition:opacity .12s}
 .bsock .rail{position:absolute;left:-2px;top:-17px;width:4px;height:34px;border-radius:2px;background:var(--bc);box-shadow:0 0 0 1.5px var(--surface)}
-.bsock .plug{position:absolute;left:-7px;top:-8px;width:22px;height:16px;border-radius:8px;background:var(--bc);box-shadow:0 0 0 2px var(--surface),0 1px 4px rgba(0,0,0,.3);display:grid;place-items:center}
-.bsock .plug svg{width:10px;height:10px;fill:none;stroke:var(--flag-ink);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
-.bsock[data-dir="in"] .plug svg{transform:scaleX(-1)}
 .bstub{fill:none;stroke:var(--bc);stroke-width:2.6;pointer-events:none;transition:opacity .12s}
 .a.badged{fill:var(--bc)}
 #world.focus .bsock:not(.rel),#world.focus .bstub:not(.rel){opacity:.3}
@@ -1130,10 +1127,9 @@ function renderEdges() {
   const ends = layoutEnds(byId, routes);
   let svg = '', labels = '', handles = '', arrows = '', selSvg = '', stubs = '', socks = '';
   // Match badges: a link end that meets a sub-flow box (level above) or an entry/exit point (inside) gets a
-  // port plug there, and that stretch of the line takes the badge colour. `dir` is the flow at the plug.
+  // lit strip on the box edge there, and that stretch of the line takes the badge colour.
   const badgeOf = (n, e) => n.sub ? e.badge : n.type === 'pin' ? n.link.badge : '';
-  const CHEVRON = '<svg viewBox="0 0 10 10"><path d="M3.5 1.5 7 5 3.5 8.5"/></svg>';
-  const plug = (pt, c, eid, dir) => `<div class="bsock" data-e="${eid}" data-dir="${dir}" style="left:${pt.x}px;top:${pt.y}px;--bc:var(--b-${c});--a:${Math.round(Math.atan2(pt.ny, pt.nx) * 180 / Math.PI)}deg"><i class="rail"></i><i class="plug">${CHEVRON}</i></div>`;
+  const plug = (pt, c, eid) => `<div class="bsock" data-e="${eid}" style="left:${pt.x}px;top:${pt.y}px;--bc:var(--b-${c});--a:${Math.round(Math.atan2(pt.ny, pt.nx) * 180 / Math.PI)}deg"><i class="rail"></i></div>`;
   // Temp line while making or re-attaching a link: snaps to the side it would attach to.
   const tempTo = () => {
     const o = drag.over && byId[drag.over];
@@ -1158,8 +1154,8 @@ function renderEdges() {
     if (s) selSvg += line; else svg += line;
     const ba = badgeOf(a, e), bb = badgeOf(b, e);
     arrows += `<path class="a ${e.kind}${s}${bb ? ' badged' : ''}" data-e="${e.id}" d="${g.arrow}"${bb ? ` style="--bc:var(--b-${bb})"` : ''}/>`;
-    if (ba) { stubs += `<path class="bstub" data-e="${e.id}" data-end="from" d="${g.d}" style="--bc:var(--b-${ba})"/>`; socks += plug(p, ba, e.id, 'out'); }
-    if (bb) { stubs += `<path class="bstub" data-e="${e.id}" data-end="to" d="${g.d}" style="--bc:var(--b-${bb})"/>`; socks += plug(q, bb, e.id, 'in'); }
+    if (ba) { stubs += `<path class="bstub" data-e="${e.id}" data-end="from" d="${g.d}" style="--bc:var(--b-${ba})"/>`; socks += plug(p, ba, e.id); }
+    if (bb) { stubs += `<path class="bstub" data-e="${e.id}" data-end="to" d="${g.d}" style="--bc:var(--b-${bb})"/>`; socks += plug(q, bb, e.id); }
     if (s) handles += `<circle class="eh" data-eid="${e.id}" data-end="from" cx="${p.x}" cy="${p.y}" r="6"/><circle class="eh" data-eid="${e.id}" data-end="to" cx="${q.x}" cy="${q.y}" r="6"/>`;
     const cs = e.conds.map(c => c.trim()).filter(Boolean);
     // In compact detail the IF conditions fold into a small "IF ×n" chip; hover or select the link to read them.
