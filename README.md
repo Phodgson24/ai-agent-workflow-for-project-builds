@@ -11,7 +11,7 @@
 │
 └─ workflows/                    ← setups saved in the app (canvas JSON)
     ├─ README.md                    which is which, how to load one
-    ├─ named-workers-v2.json        ★ MAIN (the current design)
+    ├─ named-workers-v3.json        ★ MAIN (the current design)
     └─ archive/                     older versions, kept for reference
 ```
 

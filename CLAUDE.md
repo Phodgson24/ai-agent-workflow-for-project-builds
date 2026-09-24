@@ -11,7 +11,8 @@ Read `app/docs/HANDOFF.md` first: it covers the user, the code map, setups, test
 - Before publishing, `Artifact read` the live page. If it changed since the last commit, merge first.
 
 ## Setups (app database)
-- **Main setup:** `dhhsk0icnb92x7`, "user agent + project folder (named workers)v2" (12 boxes · 5 links). The user saves it from the app. It is newer than `namedworkers01`: same boxes and links, with layout tweaks.
+- **Main setup:** `namedworkersv3`, "user agent + project folder (named workers) v3" (13 boxes · 5 links). Built by Claude from v2 (`dhhsk0icnb92x7`): compaction moved into the handoff sub-flow, now "Context full: compact or hand off", with one shared safe-point check and commit.
+- v2 (`dhhsk0icnb92x7`) is the user's own save and is kept unchanged.
 - Never overwrite a setup without being asked. When editing one, pin the write with `if_version`.
 - When re-exporting, write each setup's `canvas` field to `workflows/` (see `workflows/README.md`).
 
