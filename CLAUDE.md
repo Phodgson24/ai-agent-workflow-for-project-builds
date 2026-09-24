@@ -16,6 +16,10 @@ Read `app/docs/HANDOFF.md` first: it covers the user, the code map, setups, test
 - Never overwrite a setup without being asked. When editing one, pin the write with `if_version`.
 - When re-exporting, write each setup's `canvas` field to `workflows/` (see `workflows/README.md`).
 
+## App features added in the cloud
+- **Match badges:** an optional `badge` colour on a link that touches a sub-flow box. It is drawn as a dot at that end of the link, and at the matching `pin:<link id>` point inside the sub-flow (dot in the pill header too). Set it in Details for that link or its entry/exit point. Code: `BADGES`, `badgePicker()`, `badgeOf`/`dot` in `renderEdges()`, `.bdg`/`.bdot`/`.bsw` CSS.
+- Fixed: after double-clicking into a sub-flow, the canvas stayed faded (the hover focus pointed at a box on the level above). `applyFocus()` now ignores targets that aren't on the current level.
+
 ## Testing in the cloud
 - The handoff's `preview_start` tools are desktop-only. Here, use Playwright with Chromium (preinstalled, `executablePath: '/opt/pw-browsers/chromium'` if needed) and a local `python3 -m http.server`.
 - Syntax check: extract the `<script>` block and run `node --check`.

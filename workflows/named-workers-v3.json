@@ -194,7 +194,8 @@
             "label": "handoff doc",
             "note": "",
             "to": "pin:result",
-            "toSide": "l"
+            "toSide": "l",
+            "badge": "cyan"
           },
           {
             "conds": [],
@@ -244,15 +245,16 @@
             "toSide": "t"
           },
           {
-            "id": "cont",
+            "conds": [],
             "from": "ho",
-            "to": "cw",
+            "fromSide": "",
+            "id": "cont",
             "kind": "default",
             "label": "continue same task (compacted)",
-            "conds": [],
             "note": "After compacting once, the same worker carries on with the same task. Its summary now starts with COMPACTED: 1.",
-            "fromSide": "",
-            "toSide": ""
+            "to": "cw",
+            "toSide": "",
+            "badge": "red"
           }
         ],
         "nodes": [
@@ -369,40 +371,40 @@
                   "toSide": "l"
                 },
                 {
-                  "id": "q1",
-                  "from": "cq",
-                  "to": "cmp",
-                  "kind": "conditional",
-                  "label": "no → compact once",
                   "conds": [
                     "not compacted yet this task"
                   ],
-                  "note": "",
+                  "from": "cq",
                   "fromSide": "",
+                  "id": "q1",
+                  "kind": "conditional",
+                  "label": "no → compact once",
+                  "note": "",
+                  "to": "cmp",
                   "toSide": ""
                 },
                 {
-                  "id": "q2",
-                  "from": "cq",
-                  "to": "hd",
-                  "kind": "conditional",
-                  "label": "yes → hand off",
                   "conds": [
                     "already compacted this task OR work quality slipping"
                   ],
-                  "note": "",
+                  "from": "cq",
                   "fromSide": "",
+                  "id": "q2",
+                  "kind": "conditional",
+                  "label": "yes → hand off",
+                  "note": "",
+                  "to": "hd",
                   "toSide": ""
                 },
                 {
-                  "id": "c1",
+                  "conds": [],
                   "from": "cmp",
-                  "to": "pin:cont",
+                  "fromSide": "",
+                  "id": "c1",
                   "kind": "default",
                   "label": "continue",
-                  "conds": [],
                   "note": "",
-                  "fromSide": "",
+                  "to": "pin:cont",
                   "toSide": ""
                 }
               ],
@@ -466,17 +468,17 @@
                   "y": 220
                 },
                 {
-                  "id": "cq",
-                  "type": "decision",
-                  "x": 720,
-                  "y": -4,
-                  "w": 208,
-                  "h": 96,
-                  "name": "Compacted yet this task?",
+                  "comments": [],
                   "desc": "The worker reads its summary: a COMPACTED: n line means yes. Quality slipping (repeating work, losing earlier decisions) counts as yes.",
-                  "tags": [],
+                  "h": 96,
+                  "id": "cq",
+                  "name": "Compacted yet this task?",
                   "rules": [],
-                  "comments": []
+                  "tags": [],
+                  "type": "decision",
+                  "w": 208,
+                  "x": 720,
+                  "y": -4
                 },
                 {
                   "comments": [],
@@ -497,6 +499,10 @@
                 }
               ],
               "pins": {
+                "cont": {
+                  "x": 1460,
+                  "y": -160
+                },
                 "hodoc": {
                   "x": 1460,
                   "y": 212
@@ -504,10 +510,6 @@
                 "toho": {
                   "x": -380,
                   "y": 14
-                },
-                "cont": {
-                  "x": 1460,
-                  "y": -160
                 }
               },
               "spread": {

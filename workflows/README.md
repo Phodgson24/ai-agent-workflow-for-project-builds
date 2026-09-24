@@ -13,6 +13,12 @@ Setups saved in the Agent Flow Sketchpad, exported as canvas JSON. The live copi
 
 ★ = main, the one to reference and build on. v3 = v2 with compaction merged into the handoff sub-flow (now "Context full: compact or hand off"). "Boxes" counts boxes on every level; "links" counts only the top level.
 
+## Reading the JSON (for people and AI agents)
+
+- A **sub-flow** is a box with a `sub` object: its own `nodes`, `edges` and `pins`.
+- An **entry/exit point** inside a sub-flow is written `pin:<link id>`. `<link id>` is the link on the level above that touches the sub-flow box. So `"to": "pin:hodoc"` inside means "leaves through the link `hodoc` outside".
+- A **match badge** is `"badge": "red"` (or orange, yellow, green, cyan, blue, violet, pink) on that outside link. The app shows the same coloured dot where the link meets the sub-flow box and on its `pin:` point inside. Same colour = same connection.
+
 ## Load one into the app
 
 1. Open the file and copy all of it.
