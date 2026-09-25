@@ -4,7 +4,7 @@ Setups saved in the Agent Flow Sketchpad, exported as canvas JSON. The live copi
 
 | File | Name in the app | Boxes · links | Saved (UTC) | App db id |
 |---|---|---|---|---|
-| ★ `named-workers-v8.json` | user agent + project folder (named workers) v8 | 35 · 5 | 2026-09-25 | `namedworkersv8` |
+| ★ `named-workers-v8.json` | user agent + project folder (named workers) v8 | 36 · 5 | 2026-09-25 | `namedworkersv8` |
 | `named-workers-v7.json` | … (named workers) v7 | 35 · 5 | 2026-09-25 | `namedworkersv7` |
 | `named-workers-v6.json` | … (named workers) v6 | 31 · 5 | 2026-09-25 | `namedworkersv6` |
 | `named-workers-v5.json` | … (named workers) v5 | 31 · 5 | 2026-09-25 | `namedworkersv5` |
