@@ -271,6 +271,7 @@
             "sub": {
               "edges": [
                 {
+                  "badge": "blue",
                   "conds": [],
                   "from": "pin:otoho",
                   "fromSide": "",
@@ -279,18 +280,6 @@
                   "label": "check for a safe point",
                   "note": "",
                   "to": "sp",
-                  "toSide": "",
-                  "badge": "blue"
-                },
-                {
-                  "conds": [],
-                  "from": "cm",
-                  "fromSide": "",
-                  "id": "h3",
-                  "kind": "default",
-                  "label": "then",
-                  "note": "",
-                  "to": "cq",
                   "toSide": ""
                 },
                 {
@@ -377,109 +366,28 @@
                   "toSide": ""
                 },
                 {
-                  "id": "spout",
-                  "from": "sp",
-                  "to": "cm",
-                  "kind": "default",
-                  "label": "safe point reached → commit",
+                  "badge": "violet",
                   "conds": [],
-                  "note": "The orchestrator's own work is at a safe point, and no worker is mid-task (or it has saved and paused).",
+                  "from": "sp",
                   "fromSide": "",
-                  "toSide": "",
-                  "badge": "violet"
+                  "id": "spout",
+                  "kind": "default",
+                  "label": "safe point reached + committed",
+                  "note": "The orchestrator's own work is at a safe point, any active worker has saved and paused, and progress.md is committed.",
+                  "to": "cq",
+                  "toSide": ""
                 }
               ],
               "nodes": [
                 {
-                  "id": "sp",
-                  "type": "group",
-                  "x": 0,
-                  "y": 0,
-                  "w": 260,
-                  "h": 150,
-                  "name": "Reach a safe point (pause any active worker)",
-                  "desc": "Finish the current review, then check for an active worker: if one is mid-task, tell it to save and pause, and wait for its reply.",
-                  "path": "",
-                  "tags": [],
-                  "rules": [],
                   "comments": [],
+                  "desc": "Finish the current review, pause any active worker (it saves and stops, then replies), then commit progress.md.",
+                  "h": 150,
+                  "id": "sp",
+                  "name": "Reach a safe point (pause any active worker)",
+                  "path": "",
+                  "rules": [],
                   "sub": {
-                    "nodes": [
-                      {
-                        "comments": [],
-                        "desc": "Safe point = the current review or hand-out is finished and progress.md is up to date.",
-                        "h": 88,
-                        "id": "cp",
-                        "name": "At a safe point?",
-                        "path": "",
-                        "rules": [],
-                        "tags": [],
-                        "type": "decision",
-                        "w": 200,
-                        "x": 0,
-                        "y": 0
-                      },
-                      {
-                        "comments": [],
-                        "desc": "Finish the review or hand-out in progress, then check again. (Context is already filling, so don't start a new one.)",
-                        "h": 96,
-                        "id": "kw",
-                        "name": "Finish the current step",
-                        "path": "",
-                        "rules": [],
-                        "tags": [],
-                        "type": "note",
-                        "w": 200,
-                        "x": 0,
-                        "y": 220
-                      },
-                      {
-                        "comments": [],
-                        "desc": "Is a worker thread mid-task? progress.md shows the active worker and its state.",
-                        "h": 100,
-                        "id": "wa",
-                        "name": "Worker active?",
-                        "path": "",
-                        "rules": [],
-                        "tags": [
-                          "by: orchestrator"
-                        ],
-                        "type": "decision",
-                        "w": 216,
-                        "x": 360,
-                        "y": -6
-                      },
-                      {
-                        "comments": [],
-                        "desc": "\"Find a safe spot, commit your work ([M##_H##] ...), add a checkpoint line to progress.md, then stop and wait so you can resume.\"",
-                        "h": 120,
-                        "id": "wp",
-                        "name": "Tell the worker: save and pause",
-                        "path": "",
-                        "rules": [],
-                        "tags": [
-                          "by: orchestrator"
-                        ],
-                        "type": "tool",
-                        "w": 232,
-                        "x": 360,
-                        "y": 250
-                      },
-                      {
-                        "comments": [],
-                        "desc": "The worker replies with its commit hash and current step.",
-                        "h": 104,
-                        "id": "wc",
-                        "name": "Worker paused?",
-                        "path": "",
-                        "rules": [],
-                        "tags": [],
-                        "type": "decision",
-                        "w": 216,
-                        "x": 740,
-                        "y": 258
-                      }
-                    ],
                     "edges": [
                       {
                         "conds": [
@@ -563,7 +471,7 @@
                         "kind": "conditional",
                         "label": "no → commit",
                         "note": "",
-                        "to": "pin:spout",
+                        "to": "cm",
                         "toSide": ""
                       },
                       {
@@ -576,19 +484,122 @@
                         "kind": "conditional",
                         "label": "yes → commit",
                         "note": "",
-                        "to": "pin:spout",
+                        "to": "cm",
                         "toSide": ""
                       },
                       {
-                        "id": "sp0",
+                        "conds": [],
                         "from": "pin:h1",
-                        "to": "cp",
+                        "fromSide": "",
+                        "id": "sp0",
                         "kind": "default",
                         "label": "",
+                        "note": "",
+                        "to": "cp",
+                        "toSide": ""
+                      },
+                      {
+                        "id": "cm1",
+                        "from": "cm",
+                        "to": "pin:spout",
+                        "kind": "default",
+                        "label": "then",
                         "conds": [],
                         "note": "",
                         "fromSide": "",
                         "toSide": ""
+                      }
+                    ],
+                    "nodes": [
+                      {
+                        "comments": [],
+                        "desc": "Safe point = the current review or hand-out is finished and progress.md is up to date.",
+                        "h": 88,
+                        "id": "cp",
+                        "name": "At a safe point?",
+                        "path": "",
+                        "rules": [],
+                        "tags": [],
+                        "type": "decision",
+                        "w": 200,
+                        "x": 0,
+                        "y": 0
+                      },
+                      {
+                        "comments": [],
+                        "desc": "Finish the review or hand-out in progress, then check again. (Context is already filling, so don't start a new one.)",
+                        "h": 96,
+                        "id": "kw",
+                        "name": "Finish the current step",
+                        "path": "",
+                        "rules": [],
+                        "tags": [],
+                        "type": "note",
+                        "w": 200,
+                        "x": 0,
+                        "y": 220
+                      },
+                      {
+                        "comments": [],
+                        "desc": "Is a worker thread mid-task? progress.md shows the active worker and its state.",
+                        "h": 100,
+                        "id": "wa",
+                        "name": "Worker active?",
+                        "path": "",
+                        "rules": [],
+                        "tags": [
+                          "by: orchestrator"
+                        ],
+                        "type": "decision",
+                        "w": 216,
+                        "x": 360,
+                        "y": -6
+                      },
+                      {
+                        "comments": [],
+                        "desc": "\"Find a safe spot, commit your work ([M##_H##] ...), add a checkpoint line to progress.md, then stop and wait so you can resume.\"",
+                        "h": 120,
+                        "id": "wp",
+                        "name": "Tell the worker: save and pause",
+                        "path": "",
+                        "rules": [],
+                        "tags": [
+                          "by: orchestrator"
+                        ],
+                        "type": "tool",
+                        "w": 232,
+                        "x": 360,
+                        "y": 250
+                      },
+                      {
+                        "comments": [],
+                        "desc": "The worker replies with its commit hash and current step.",
+                        "h": 104,
+                        "id": "wc",
+                        "name": "Worker paused?",
+                        "path": "",
+                        "rules": [],
+                        "tags": [],
+                        "type": "decision",
+                        "w": 216,
+                        "x": 740,
+                        "y": 258
+                      },
+                      {
+                        "comments": [],
+                        "desc": "Commit message starts with the orchestrator ID: [O01] ...",
+                        "h": 88,
+                        "id": "cm",
+                        "name": "Commit progress.md",
+                        "path": "",
+                        "rules": [],
+                        "tags": [
+                          "git"
+                        ],
+                        "type": "tool",
+                        "w": 200,
+                        "x": 1120,
+                        "y": -4
                       }
                     ],
                     "pins": {
@@ -597,7 +608,7 @@
                         "y": 14
                       },
                       "spout": {
-                        "x": 1120,
+                        "x": 1480,
                         "y": 4
                       }
                     },
@@ -605,22 +616,11 @@
                       "x": 0,
                       "y": 0
                     }
-                  }
-                },
-                {
-                  "comments": [],
-                  "desc": "Commit message starts with the orchestrator ID: [O01] ...",
-                  "h": 88,
-                  "id": "cm",
-                  "name": "Commit progress.md",
-                  "path": "",
-                  "rules": [],
-                  "tags": [
-                    "git"
-                  ],
-                  "type": "tool",
-                  "w": 200,
-                  "x": 400,
+                  },
+                  "tags": [],
+                  "type": "group",
+                  "w": 260,
+                  "x": 0,
                   "y": 0
                 },
                 {
@@ -634,7 +634,7 @@
                   "tags": [],
                   "type": "memory",
                   "w": 216,
-                  "x": 1140,
+                  "x": 780,
                   "y": 190
                 },
                 {
@@ -647,7 +647,7 @@
                   "tags": [],
                   "type": "decision",
                   "w": 208,
-                  "x": 760,
+                  "x": 400,
                   "y": -4
                 },
                 {
@@ -664,7 +664,7 @@
                   ],
                   "type": "tool",
                   "w": 232,
-                  "x": 1140,
+                  "x": 780,
                   "y": -190
                 },
                 {
@@ -681,7 +681,7 @@
                   "tags": [],
                   "type": "agent",
                   "w": 240,
-                  "x": 1500,
+                  "x": 1140,
                   "y": 176
                 },
                 {
@@ -915,7 +915,7 @@
                   "tags": [],
                   "type": "group",
                   "w": 260,
-                  "x": 1500,
+                  "x": 1140,
                   "y": 440
                 },
                 {
@@ -931,17 +931,17 @@
                   ],
                   "type": "tool",
                   "w": 232,
-                  "x": 1500,
+                  "x": 1140,
                   "y": -196
                 }
               ],
               "pins": {
                 "ocont": {
-                  "x": 1880,
+                  "x": 1520,
                   "y": -160
                 },
                 "otake": {
-                  "x": 2260,
+                  "x": 1900,
                   "y": 470
                 },
                 "otoho": {
