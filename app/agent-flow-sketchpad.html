@@ -121,13 +121,14 @@ header{grid-column:1/-1;display:flex;align-items:center;gap:8px;flex-wrap:wrap;p
 .std.t-human{border-radius:22px}
 .std.t-decision{border-width:1.5px;border-style:dashed}
 .nin{position:absolute;inset:0;overflow:hidden;border-radius:inherit;display:flex;flex-direction:column}
+.nin > *{flex-shrink:0}   /* lines never squash, so auto-size can see when text needs more room */
 .nh{display:flex;align-items:center;gap:7px;padding:6px 10px;background:color-mix(in oklab,var(--tc) 14%,var(--surface));border-bottom:1px solid color-mix(in oklab,var(--tc) 22%,var(--line))}
 .std.t-human .nh{padding-left:16px}
 .nt{font:600 10px var(--mono);letter-spacing:.09em;text-transform:uppercase;color:var(--tc)}
 .nm{margin-left:auto;font:500 10.5px var(--mono);color:var(--muted);white-space:nowrap}
 .nn{font-weight:600;font-size:13.5px;padding:7px 10px 0;line-height:1.3;overflow-wrap:anywhere}
 .std.t-human .nn,.std.t-human .nd,.std.t-human .ntags{padding-left:16px}
-.nd{font-size:12px;color:var(--muted);padding:2px 10px 0;line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.nd{font-size:12px;color:var(--muted);padding:2px 10px 0;line-height:1.4;white-space:pre-wrap;overflow-wrap:anywhere}
 .nmodel{font:500 11px var(--mono);color:var(--tc);padding:3px 10px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .nmodel span{color:var(--muted)}
 .npath{font:400 11.5px var(--mono);color:var(--ink);padding:3px 10px 0;overflow-wrap:anywhere}
@@ -141,7 +142,7 @@ header{grid-column:1/-1;display:flex;align-items:center;gap:8px;flex-wrap:wrap;p
 
 .note{background:color-mix(in oklab,var(--t-note) 26%,var(--surface));border-radius:3px;box-shadow:var(--shadow);cursor:grab;--tc:var(--t-note)}
 .note .nn{padding:10px 12px 0;font-size:13px}
-.note .nd{color:var(--ink);opacity:.8;-webkit-line-clamp:12;padding:4px 12px 10px;white-space:pre-wrap}
+.note .nd{color:var(--ink);opacity:.8;padding:4px 12px 10px}
 
 /* Groups are click-through except their title bar and resize corner, so nested groups and empty space stay usable. */
 .group{border:1.5px dashed color-mix(in oklab,var(--t-group) 70%,transparent);background:color-mix(in oklab,var(--t-group) 7%,transparent);border-radius:14px;pointer-events:none;--tc:var(--t-group)}
@@ -244,7 +245,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-
 .g-subflow{background:transparent;border:2px solid var(--tc);border-radius:2px;box-shadow:3px 3px 0 -1px var(--surface),3px 3px 0 0 var(--tc)}
 .sub{background:color-mix(in oklab,var(--t-group) 7%,var(--surface));border:1.5px solid color-mix(in oklab,var(--t-group) 60%,var(--line));border-radius:12px;cursor:grab;--tc:var(--t-group);
   box-shadow:5px 5px 0 -1px var(--bg),5px 5px 0 0 color-mix(in oklab,var(--t-group) 45%,var(--line)),var(--shadow)}
-.sub .nh b{font-weight:600;font-size:13px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sub .nh b{font-weight:600;font-size:13px;color:var(--ink);overflow-wrap:anywhere;line-height:1.3}
 .sfoot{margin-top:auto;padding:6px 10px 8px;font:500 11px var(--mono);color:var(--muted);display:flex;gap:8px;flex-wrap:wrap}
 .sfoot .open{color:var(--accent)}
 .pv{position:absolute;left:8px;top:36px;width:calc(100% - 16px);height:calc(100% - 44px);opacity:0;pointer-events:none;overflow:visible}
@@ -652,7 +653,7 @@ function normEdges(list, ids, allowPins) {
 function normSub(s) {
   const nodes = normNodes(s.nodes), pins = {};
   for (const [k, v] of Object.entries(s.pins && typeof s.pins === 'object' ? s.pins : {}))
-    if (v && isFinite(+v.x) && isFinite(+v.y)) pins[k] = {x:+v.x, y:+v.y};
+    if (v && isFinite(+v.x) && isFinite(+v.y)) pins[k] = {x:+v.x, y:+v.y, ...(+v.h > 0 ? {h:+v.h} : {})};
   const out = {nodes, edges:normEdges(s.edges, new Set(nodes.map(n => n.id)), true), pins, spread:normSpread(s.spread)};
   const rp = normResetPoint(s.resetPoint); if (rp) out.resetPoint = rp;
   return out;
@@ -755,7 +756,7 @@ function pinNodes() {
     const dir = e.to === curGroup.id ? 'in' : 'out', i = dir === 'in' ? ni++ : no++;
     const pos = C.pins[e.id] ??= {x: dir === 'in' ? snap(x0 - 280) : snap(x1 + 80), y: snap(y0 + i * 88)};
     const other = byId[dir === 'in' ? e.from : e.to];
-    return {id:'pin:' + e.id, type:'pin', dir, link:e, w:208, h:60, other: other?.name || 'outside',
+    return {id:'pin:' + e.id, type:'pin', dir, link:e, w:208, h:pos.h || 60, other: other?.name || 'outside',
       name: e.label || (dir === 'in' ? 'Input' : 'Output'), desc:'', tags:[], rules:[], comments:[],
       get x() { return pos.x; }, set x(v) { pos.x = v; }, get y() { return pos.y; }, set y(v) { pos.y = v; }};
   });
@@ -1241,12 +1242,28 @@ world.addEventListener('pointerover', e => {
   hoverT = setTimeout(() => { hoverFocus = f; applyFocus(f || sel); }, f ? 350 : 120);
 });
 world.addEventListener('pointerleave', () => { clearTimeout(hoverT); hoverFocus = null; applyFocus(sel); });
+// Auto-size: a box grows taller until all of its text fits (it never shrinks below the size you gave it).
+// Measured after drawing, so it follows the real text, fonts and detail level; skipped while you resize a box.
+function autoSize() {
+  if (drag?.mode === 'resize') return;
+  let grew = false;
+  for (const el of document.querySelectorAll('#nodes .node')) {
+    const nin = el.querySelector('.nin'); if (!nin) continue;
+    const extra = nin.scrollHeight - nin.clientHeight; if (extra <= 1) continue;
+    const n = getNode(el.dataset.id); if (!n) continue;
+    const h = Math.ceil((n.h + extra) / 8) * 8;
+    if (n.type === 'pin') { const pos = C.pins[n.link.id]; if (pos) pos.h = h; } else n.h = h;
+    el.style.height = h + 'px'; grew = true;
+  }
+  if (grew) save();
+}
 let lastCounts = [];
 function renderCanvas() {
   const {flags, counts, inside} = computeFlags(); lastCounts = counts;
   // Largest frames paint first so nested (smaller) frames sit on top and stay grabbable.
   $('#groups').innerHTML = C.nodes.filter(isFrame).sort((a, b) => area(b) - area(a)).map(n => nodeHTML(n)).join('');
   $('#nodes').innerHTML = viewNodes().filter(n => !isFrame(n)).map(n => nodeHTML(n, flags[n.id], inside[n.id])).join('');
+  autoSize();
   renderEdges();
   $('#empty').hidden = viewNodes().length > 0;
   updateCounts();
@@ -1798,7 +1815,7 @@ const takeSpacingBase = key => { spacingBase[key] = snapshotLayout(); };
 function planSpacing(axis, grow) {
   const P = axis === 'x' ? 'x' : 'y', S = axis === 'x' ? 'w' : 'h';
   const items = C.nodes.filter(n => !isFrame(n)).map(n => ({key:n.id, s:n[P], e:n[P] + n[S]}))
-    .concat(Object.entries(C.pins || {}).map(([k, p]) => ({key:'pin:' + k, s:p[P], e:p[P] + (axis === 'x' ? PIN_W : PIN_H)})))
+    .concat(Object.entries(C.pins || {}).map(([k, p]) => ({key:'pin:' + k, s:p[P], e:p[P] + (axis === 'x' ? PIN_W : p.h || PIN_H)})))
     .sort((a, b) => a.s - b.s);
   const bands = [];
   for (const it of items) {

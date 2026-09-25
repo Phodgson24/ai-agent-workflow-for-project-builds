@@ -4,7 +4,7 @@ Read `app/docs/HANDOFF.md` first: it covers the user, the code map, setups, test
 
 ## Repo layout
 - `app/`: the HTML app and its docs. `workflows/`: setups exported from the app. Keep the two separate.
-- The repo file `app/agent-flow-sketchpad.html` is the source of truth. It matches the live artifact as last published from this repo (version 26, badges zoom with the canvas).
+- The repo file `app/agent-flow-sketchpad.html` is the source of truth. It matches the live artifact as last published from this repo (version 27, auto-size boxes).
 
 ## Publishing
 - Edit `app/agent-flow-sketchpad.html`, test it, commit it, then publish with `Artifact` using `url: https://claude.ai/artifact/FAht8ymX9NECxeoieiT26w` and `file_path` set to that file. Omit `capabilities` and `icon`.
@@ -21,6 +21,7 @@ Read `app/docs/HANDOFF.md` first: it covers the user, the code map, setups, test
 
 ## App features added in the cloud
 - **Match badges:** an optional `badge` colour on a link that touches a sub-flow box. Drawn as a lit strip along the box edge where the link meets the sub-flow box, and at the matching `pin:<link id>` point inside, whose pill takes the colour. The last 60 canvas units of the line and its arrowhead take the colour too. Strips live in `#badges`, a layer above the boxes, sized in canvas units (5×40) so they zoom with the box, like the line. Set in Details for that link or its entry/exit point. Code: `BADGES`, `badgePicker()`, `badgeOf`/`plug` in `renderEdges()`, `sizeStubs()`, `.bsock`/`.bstub`/`.pin.badged` CSS.
+- **Auto-size:** `autoSize()` (called in `renderCanvas()` before `renderEdges()`) grows any box, sub-flow box or entry/exit pill until its text fits; it never shrinks below the stored size and skips while resizing. Descriptions are no longer line-clamped, sub-flow titles wrap, and `.nin > *{flex-shrink:0}` stops lines squashing so overflow is measurable. Pin heights are kept as `sub.pins[id].h`.
 - Fixed: after double-clicking into a sub-flow, the canvas stayed faded (the hover focus pointed at a box on the level above). `applyFocus()` now ignores targets that aren't on the current level.
 
 ## Testing in the cloud
