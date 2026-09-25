@@ -65,7 +65,23 @@ The orchestrator follows the same context rule as workers: compact once, then ha
   **Milestone status** · **Active worker + ID** · **Open reviews** · **Next steps** · **Key decisions**.
 - Tell the user the next orchestrator's exact name (`00 - Orchestrator O02`) on one line.
 - A fresh orchestrator reads the latest orchestrator handoff doc and `progress.md` before doing
-  anything else, then carries on from where the last one stopped.
+  anything else, then runs the handover check below with the old orchestrator.
+
+### Ownership and the handover check
+- The first line of `progress.md` names the owner: `OWNER: 00 - Orchestrator O01`. Only the owner
+  sends tasks, starts workers or accepts results. Any other orchestrator does none of these.
+- **Handover-only mode:** once the old orchestrator has written its handoff doc, it does no more
+  reviews and sends no new tasks. It stays active only to answer handover questions. The worker
+  finishes its current step and pauses until the owner changes.
+- **Handover check** (old O01 and new O02 are both active):
+  1. O02 restates: milestone `M##`, active worker name and state, open reviews, next step.
+  2. O02 messages the paused worker: "Your orchestrator is now 00 - Orchestrator O02. Reply with
+     your ID and current step."
+  3. O01 compares both with what it knows.
+     - All match: O02 writes `OWNER: 00 - Orchestrator O02` in `progress.md` and logs the
+       handover. The worker resumes with O02. O01 stops and is archived.
+     - Mismatch: O01 tells O02 exactly what is missing or wrong, then they repeat from step 1.
+       At most 2 fix rounds. If it still fails, both stop and tell the user what doesn't match.
 
 ### Housekeeping
 - Archive a worker's chat once its work is accepted or handed off.
