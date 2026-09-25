@@ -1,0 +1,1528 @@
+{
+  "edges": [
+    {
+      "badge": "blue",
+      "conds": [],
+      "from": "orch",
+      "fromSide": "r",
+      "id": "task",
+      "kind": "default",
+      "label": "task / fix instructions",
+      "note": "Fix rounds go to the same worker; its name does not change.",
+      "to": "slot",
+      "toSide": "l"
+    },
+    {
+      "badge": "green",
+      "conds": [],
+      "from": "slot",
+      "fromSide": "l",
+      "id": "result",
+      "kind": "default",
+      "label": "result + handoff doc",
+      "note": "",
+      "to": "orch",
+      "toSide": "r"
+    },
+    {
+      "badge": "violet",
+      "conds": [
+        "handover OR compacted worker finished its task OR milestone accepted"
+      ],
+      "from": "orch",
+      "fromSide": "t",
+      "id": "replace",
+      "kind": "conditional",
+      "label": "start fresh worker",
+      "note": "Names it: same M, H+1 after a handover or a compacted worker; M+1, H00 for the next milestone (see the Orchestrator rules).",
+      "to": "slot",
+      "toSide": "t"
+    },
+    {
+      "conds": [],
+      "from": "slot",
+      "fromSide": "r",
+      "id": "edits",
+      "kind": "default",
+      "label": "reads + edits",
+      "note": "",
+      "to": "repo",
+      "toSide": "l"
+    },
+    {
+      "conds": [],
+      "from": "orch",
+      "fromSide": "b",
+      "id": "review",
+      "kind": "default",
+      "label": "reads to review + milestones.md",
+      "note": "Read-only for review. Also reads milestones.md for names and writes progress.md.",
+      "to": "repo",
+      "toSide": "b"
+    }
+  ],
+  "name": "user agent + project folder (named workers) v9-claude",
+  "nodes": [
+    {
+      "comments": [],
+      "desc": "Orchestrator chats rotate here (O01, O02…). Same loop as workers.",
+      "h": 150,
+      "id": "orch",
+      "name": "Orchestrator Thread",
+      "path": "",
+      "rules": [],
+      "sub": {
+        "nodes": [
+          {
+            "id": "co",
+            "type": "agent",
+            "x": 0,
+            "y": 0,
+            "w": 240,
+            "h": 120,
+            "name": "Orchestrator · 00 - Orchestrator O01",
+            "desc": "Plans from milestones.md, hands out tasks, reviews results, keeps progress.md.",
+            "path": "",
+            "tags": [
+              "pinned",
+              "reviews via subagent"
+            ],
+            "rules": [
+              {
+                "if": [
+                  "result passes review"
+                ],
+                "then": "accept the task"
+              },
+              {
+                "if": [
+                  "result fails review"
+                ],
+                "then": "send fix instructions to the SAME worker (name unchanged)"
+              },
+              {
+                "if": [
+                  "worker handed off mid-task"
+                ],
+                "then": "start fresh worker: same M, H+1; it reads the handoff doc first"
+              },
+              {
+                "if": [
+                  "result says compacted: replace me"
+                ],
+                "then": "after accepting, start a fresh worker for the next task: same M, H+1 (or M+1, H00 if the milestone is done)"
+              },
+              {
+                "if": [
+                  "milestone accepted"
+                ],
+                "then": "next worker is M+1, H00 - next name from milestones.md"
+              },
+              {
+                "if": [
+                  "a new worker is started"
+                ],
+                "then": "tell the user its exact name; log it in progress.md; archive the previous worker chat"
+              },
+              {
+                "if": [
+                  "you are not the OWNER in progress.md"
+                ],
+                "then": "send no tasks, start no workers, accept no results"
+              },
+              {
+                "if": [
+                  "handing out a task"
+                ],
+                "then": "write it as a goal: what to achieve, what not to change, how to verify, when to stop"
+              },
+              {
+                "if": [
+                  "a review needs tests, logs or a big diff read"
+                ],
+                "then": "hand it to a subagent and keep only its summary"
+              }
+            ],
+            "comments": [],
+            "provider": "codex",
+            "model": "gpt-6-astra",
+            "effort": "high"
+          },
+          {
+            "id": "ock",
+            "type": "decision",
+            "x": 600,
+            "y": 24,
+            "w": 208,
+            "h": 96,
+            "name": "Context check",
+            "desc": "After each review. Codex measures room (/status).",
+            "path": "",
+            "tags": [
+              "by: orchestrator"
+            ],
+            "rules": [],
+            "comments": []
+          },
+          {
+            "id": "osp",
+            "type": "group",
+            "x": 576,
+            "y": 420,
+            "w": 250,
+            "h": 130,
+            "name": "① Safe point",
+            "desc": "Finish the review, pause any active worker, commit progress.md.",
+            "path": "",
+            "tags": [],
+            "rules": [],
+            "comments": [],
+            "sub": {
+              "nodes": [
+                {
+                  "id": "cp",
+                  "type": "decision",
+                  "x": 0,
+                  "y": 0,
+                  "w": 208,
+                  "h": 96,
+                  "name": "At a safe point?",
+                  "desc": "Current review or hand-out finished.",
+                  "path": "",
+                  "tags": [],
+                  "rules": [],
+                  "comments": []
+                },
+                {
+                  "id": "kw",
+                  "type": "note",
+                  "x": 0,
+                  "y": 260,
+                  "w": 216,
+                  "h": 88,
+                  "name": "Finish the current review",
+                  "desc": "Then check again. Start nothing new.",
+                  "path": "",
+                  "tags": [],
+                  "rules": [],
+                  "comments": []
+                },
+                {
+                  "id": "wa",
+                  "type": "decision",
+                  "x": 400,
+                  "y": -4,
+                  "w": 208,
+                  "h": 96,
+                  "name": "Worker active?",
+                  "desc": "progress.md shows the active worker.",
+                  "path": "",
+                  "tags": [],
+                  "rules": [],
+                  "comments": []
+                },
+                {
+                  "id": "wp",
+                  "type": "tool",
+                  "x": 400,
+                  "y": 260,
+                  "w": 216,
+                  "h": 88,
+                  "name": "Pause the worker",
+                  "desc": "\"Find a safe spot, commit, add a checkpoint line, then stop and wait.\"",
+                  "path": "",
+                  "tags": [
+                    "by: orchestrator"
+                  ],
+                  "rules": [],
+                  "comments": []
+                },
+                {
+                  "id": "wc",
+                  "type": "decision",
+                  "x": 800,
+                  "y": 264,
+                  "w": 208,
+                  "h": 96,
+                  "name": "Worker paused?",
+                  "desc": "It replies with commit hash + current step.",
+                  "path": "",
+                  "tags": [],
+                  "rules": [],
+                  "comments": []
+                },
+                {
+                  "id": "cm",
+                  "type": "tool",
+                  "x": 800,
+                  "y": 0,
+                  "w": 216,
+                  "h": 88,
+                  "name": "Commit progress.md",
+                  "desc": "Message starts with [O01].",
+                  "path": "",
+                  "tags": [
+                    "git"
+                  ],
+                  "rules": [],
+                  "comments": []
+                }
+              ],
+              "edges": [
+                {
+                  "id": "s0",
+                  "from": "pin:ofull",
+                  "to": "cp",
+                  "kind": "default",
+                  "label": "",
+                  "conds": [],
+                  "note": "",
+                  "fromSide": "",
+                  "toSide": ""
+                },
+                {
+                  "id": "s1",
+                  "from": "cp",
+                  "to": "wa",
+                  "kind": "conditional",
+                  "label": "yes",
+                  "conds": [
+                    "current review finished"
+                  ],
+                  "note": "",
+                  "fromSide": "",
+                  "toSide": ""
+                },
+                {
+                  "id": "s2",
+                  "from": "cp",
+                  "to": "kw",
+                  "kind": "default",
+                  "label": "no",
+                  "conds": [],
+                  "note": "",
+                  "fromSide": "",
+                  "toSide": ""
+                },
+                {
+                  "id": "s3",
+                  "from": "kw",
+                  "to": "cp",
+                  "kind": "default",
+                  "label": "check again",
+                  "conds": [],
+                  "note": "",
+                  "fromSide": "",
+                  "toSide": ""
+                },
+                {
+                  "id": "s4",
+                  "from": "wa",
+                  "to": "cm",
+                  "kind": "conditional",
+                  "label": "no",
+                  "conds": [
+                    "no worker mid-task"
+                  ],
+                  "note": "",
+                  "fromSide": "",
+                  "toSide": ""
+                },
+                {
+                  "id": "s5",
+                  "from": "wa",
+                  "to": "wp",
+                  "kind": "conditional",
+                  "label": "yes",
+                  "conds": [
+                    "a worker is mid-task"
+                  ],
+                  "note": "",
+                  "fromSide": "",
+                  "toSide": ""
+                },
+                {
+                  "id": "s6",
+                  "from": "wp",
+                  "to": "wc",
+                  "kind": "default",
+                  "label": "wait for reply",
+                  "conds": [],
+                  "note": "",
+                  "fromSide": "",
+                  "toSide": ""
+                },
+                {
+                  "id": "s7",
+                  "from": "wc",
+                  "to": "cm",
+                  "kind": "conditional",
+                  "label": "yes",
+                  "conds": [
+                    "worker replied: committed + stopped"
+                  ],
+                  "note": "",
+                  "fromSide": "",
+                  "toSide": ""
+                },
+                {
+                  "id": "s8",
+                  "from": "wc",
+                  "to": "wp",
+                  "kind": "conditional",
+                  "label": "not yet → remind",
+                  "conds": [
+                    "no reply yet"
+                  ],
+                  "note": "",
+                  "fromSide": "",
+                  "toSide": ""
+                },
+                {
+                  "id": "s9",
+                  "from": "cm",
+                  "to": "pin:osp2",
+                  "kind": "default",
+                  "label": "done",
+                  "conds": [],
+                  "note": "",
+                  "fromSide": "",
+                  "toSide": ""
+                }
+              ],
+              "pins": {
+                "ofull": {
+                  "x": -420,
+                  "y": 4
+                },
+                "osp2": {
+                  "x": 1180,
+                  "y": 4
+                }
+              },
+              "spread": {
+                "x": 0,
+                "y": 0
+              }
+            }
+          },
+          {
+            "id": "och",
+            "type": "group",
+            "x": 0,
+            "y": 480,
+            "w": 250,
+            "h": 130,
+            "name": "② Compact or hand over",
+            "desc": "Compact once; next time hand over to O02 with a handover check.",
+            "path": "",
+            "tags": [],
+            "rules": [],
+            "comments": [],
+            "sub": {
+              "nodes": [
+                {
+                  "id": "cq",
+                  "type": "decision",
+                  "x": 0,
+                  "y": 0,
+                  "w": 208,
+                  "h": 96,
+                  "name": "Compacted yet?",
+                  "desc": "A COMPACTED: n line in the summary = yes. Losing track also counts as yes.",
+                  "path": "",
+                  "tags": [],
+                  "rules": [],
+                  "comments": []
+                },
+                {
+                  "id": "cmp",
+                  "type": "tool",
+                  "x": 400,
+                  "y": -220,
+                  "w": 216,
+                  "h": 88,
+                  "name": "Compact (/compact)",
+                  "desc": "Once, at this safe point. Codex may also compact on its own.",
+                  "path": "",
+                  "tags": [
+                    "by: orchestrator"
+                  ],
+                  "rules": [],
+                  "comments": []
+                },
+                {
+                  "id": "wr",
+                  "type": "tool",
+                  "x": 780,
+                  "y": -220,
+                  "w": 216,
+                  "h": 88,
+                  "name": "Resume the worker",
+                  "desc": "Only if one was paused: \"Carry on from your checkpoint.\"",
+                  "path": "",
+                  "tags": [
+                    "by: orchestrator"
+                  ],
+                  "rules": [],
+                  "comments": []
+                },
+                {
+                  "id": "hd",
+                  "type": "memory",
+                  "x": 400,
+                  "y": 220,
+                  "w": 216,
+                  "h": 88,
+                  "name": "Write handoff doc",
+                  "desc": "handoffs/O01-orchestrator.md: short, points to progress.md.",
+                  "path": "",
+                  "tags": [],
+                  "rules": [],
+                  "comments": []
+                },
+                {
+                  "id": "fo",
+                  "type": "agent",
+                  "x": 780,
+                  "y": 210,
+                  "w": 240,
+                  "h": 120,
+                  "name": "Fresh orchestrator · O02",
+                  "desc": "Reads the handoff doc and progress.md first.",
+                  "path": "",
+                  "tags": [],
+                  "rules": [],
+                  "comments": [],
+                  "provider": "codex",
+                  "model": "gpt-6-astra",
+                  "effort": "high"
+                },
+                {
+                  "id": "hc",
+                  "type": "group",
+                  "x": 1180,
+                  "y": 220,
+                  "w": 250,
+                  "h": 130,
+                  "name": "Handover check",
+                  "desc": "Old and new orchestrator overlap briefly: 3 checks, then ownership moves.",
+                  "path": "",
+                  "tags": [],
+                  "rules": [],
+                  "comments": [],
+                  "sub": {
+                    "nodes": [
+                      {
+                        "id": "h1",
+                        "type": "tool",
+                        "x": 0,
+                        "y": 0,
+                        "w": 216,
+                        "h": 88,
+                        "name": "1 · O02 restates the state",
+                        "desc": "Milestone, active worker, open reviews, next step.",
+                        "path": "",
+                        "tags": [
+                          "by: O02"
+                        ],
+                        "rules": [],
+                        "comments": []
+                      },
+                      {
+                        "id": "h2",
+                        "type": "tool",
+                        "x": 380,
+                        "y": 0,
+                        "w": 216,
+                        "h": 88,
+                        "name": "2 · O02 pings the worker",
+                        "desc": "\"Your orchestrator is now O02. Reply with your ID and current step.\"",
+                        "path": "",
+                        "tags": [
+                          "by: O02"
+                        ],
+                        "rules": [],
+                        "comments": []
+                      },
+                      {
+                        "id": "hq",
+                        "type": "decision",
+                        "x": 760,
+                        "y": -4,
+                        "w": 208,
+                        "h": 96,
+                        "name": "All match?",
+                        "desc": "O01 checks the restatement and the worker's reply.",
+                        "path": "",
+                        "tags": [],
+                        "rules": [],
+                        "comments": []
+                      },
+                      {
+                        "id": "h3",
+                        "type": "tool",
+                        "x": 1140,
+                        "y": -260,
+                        "w": 216,
+                        "h": 88,
+                        "name": "3 · OWNER → O02",
+                        "desc": "O02 writes OWNER: O02 in progress.md. O01 stops and is archived.",
+                        "path": "",
+                        "tags": [
+                          "by: O02"
+                        ],
+                        "rules": [],
+                        "comments": []
+                      },
+                      {
+                        "id": "hx",
+                        "type": "tool",
+                        "x": 760,
+                        "y": 300,
+                        "w": 216,
+                        "h": 88,
+                        "name": "O01 fixes the gaps",
+                        "desc": "Tells O02 exactly what is missing or wrong.",
+                        "path": "",
+                        "tags": [
+                          "by: O01"
+                        ],
+                        "rules": [],
+                        "comments": []
+                      },
+                      {
+                        "id": "he",
+                        "type": "note",
+                        "x": 1180,
+                        "y": 330,
+                        "w": 216,
+                        "h": 88,
+                        "name": "Stop and tell you",
+                        "desc": "Still failing after 2 fix rounds.",
+                        "path": "",
+                        "tags": [],
+                        "rules": [],
+                        "comments": []
+                      }
+                    ],
+                    "edges": [
+                      {
+                        "id": "c0",
+                        "from": "pin:ohc",
+                        "to": "h1",
+                        "kind": "default",
+                        "label": "",
+                        "conds": [],
+                        "note": "",
+                        "fromSide": "",
+                        "toSide": ""
+                      },
+                      {
+                        "id": "c1",
+                        "from": "h1",
+                        "to": "h2",
+                        "kind": "default",
+                        "label": "then",
+                        "conds": [],
+                        "note": "",
+                        "fromSide": "",
+                        "toSide": ""
+                      },
+                      {
+                        "id": "c2",
+                        "from": "h2",
+                        "to": "hq",
+                        "kind": "default",
+                        "label": "O01 reviews",
+                        "conds": [],
+                        "note": "",
+                        "fromSide": "",
+                        "toSide": ""
+                      },
+                      {
+                        "id": "c3",
+                        "from": "hq",
+                        "to": "h3",
+                        "kind": "conditional",
+                        "label": "yes",
+                        "conds": [
+                          "restatement and worker reply match"
+                        ],
+                        "note": "",
+                        "fromSide": "",
+                        "toSide": ""
+                      },
+                      {
+                        "id": "c4",
+                        "from": "h3",
+                        "to": "pin:ohco",
+                        "kind": "default",
+                        "label": "O02 takes over",
+                        "conds": [],
+                        "note": "",
+                        "fromSide": "",
+                        "toSide": ""
+                      },
+                      {
+                        "id": "c5",
+                        "from": "hq",
+                        "to": "hx",
+                        "kind": "conditional",
+                        "label": "no → fix",
+                        "conds": [
+                          "mismatch AND fewer than 2 fix rounds"
+                        ],
+                        "note": "",
+                        "fromSide": "",
+                        "toSide": ""
+                      },
+                      {
+                        "id": "c6",
+                        "from": "hx",
+                        "to": "h1",
+                        "kind": "default",
+                        "label": "re-check",
+                        "conds": [],
+                        "note": "",
+                        "fromSide": "",
+                        "toSide": ""
+                      },
+                      {
+                        "id": "c7",
+                        "from": "hq",
+                        "to": "he",
+                        "kind": "fallback",
+                        "label": "still failing",
+                        "conds": [
+                          "mismatch after 2 fix rounds"
+                        ],
+                        "note": "",
+                        "fromSide": "",
+                        "toSide": ""
+                      }
+                    ],
+                    "pins": {
+                      "ohc": {
+                        "x": -420,
+                        "y": 4
+                      },
+                      "ohco": {
+                        "x": 1520,
+                        "y": -246
+                      }
+                    },
+                    "spread": {
+                      "x": 0,
+                      "y": 0
+                    }
+                  }
+                }
+              ],
+              "edges": [
+                {
+                  "id": "d0",
+                  "from": "pin:osp2",
+                  "to": "cq",
+                  "kind": "default",
+                  "label": "",
+                  "conds": [],
+                  "note": "",
+                  "fromSide": "",
+                  "toSide": ""
+                },
+                {
+                  "id": "d1",
+                  "from": "cq",
+                  "to": "cmp",
+                  "kind": "conditional",
+                  "label": "no → compact once",
+                  "conds": [
+                    "not compacted yet"
+                  ],
+                  "note": "",
+                  "fromSide": "",
+                  "toSide": ""
+                },
+                {
+                  "id": "d2",
+                  "from": "cmp",
+                  "to": "wr",
+                  "kind": "default",
+                  "label": "then",
+                  "conds": [],
+                  "note": "",
+                  "fromSide": "",
+                  "toSide": ""
+                },
+                {
+                  "id": "d3",
+                  "from": "wr",
+                  "to": "pin:ocont",
+                  "kind": "default",
+                  "label": "continue",
+                  "conds": [],
+                  "note": "",
+                  "fromSide": "",
+                  "toSide": ""
+                },
+                {
+                  "id": "d4",
+                  "from": "cq",
+                  "to": "hd",
+                  "kind": "conditional",
+                  "label": "yes → hand over",
+                  "conds": [
+                    "already compacted OR losing track"
+                  ],
+                  "note": "",
+                  "fromSide": "",
+                  "toSide": ""
+                },
+                {
+                  "id": "d5",
+                  "from": "hd",
+                  "to": "fo",
+                  "kind": "default",
+                  "label": "then",
+                  "conds": [],
+                  "note": "",
+                  "fromSide": "",
+                  "toSide": ""
+                },
+                {
+                  "id": "ohc",
+                  "from": "fo",
+                  "to": "hc",
+                  "kind": "default",
+                  "label": "runs the check",
+                  "conds": [],
+                  "note": "O01 stays active in handover-only mode until this passes.",
+                  "fromSide": "",
+                  "toSide": "",
+                  "badge": "yellow"
+                },
+                {
+                  "id": "ohco",
+                  "from": "hc",
+                  "to": "pin:otake",
+                  "kind": "default",
+                  "label": "passes",
+                  "conds": [],
+                  "note": "",
+                  "fromSide": "",
+                  "toSide": ""
+                }
+              ],
+              "pins": {
+                "osp2": {
+                  "x": -420,
+                  "y": 4
+                },
+                "ocont": {
+                  "x": 1180,
+                  "y": -206
+                },
+                "otake": {
+                  "x": 1620,
+                  "y": 236
+                }
+              },
+              "spread": {
+                "x": 0,
+                "y": 0
+              }
+            }
+          }
+        ],
+        "edges": [
+          {
+            "id": "o1",
+            "from": "pin:result",
+            "to": "co",
+            "kind": "default",
+            "label": "result arrives",
+            "conds": [],
+            "note": "",
+            "fromSide": "",
+            "toSide": ""
+          },
+          {
+            "id": "o2",
+            "from": "co",
+            "to": "pin:task",
+            "kind": "default",
+            "label": "task (as a goal)",
+            "conds": [],
+            "note": "",
+            "fromSide": "",
+            "toSide": ""
+          },
+          {
+            "id": "o3",
+            "from": "co",
+            "to": "pin:replace",
+            "kind": "default",
+            "label": "start fresh worker",
+            "conds": [],
+            "note": "",
+            "fromSide": "",
+            "toSide": ""
+          },
+          {
+            "id": "o4",
+            "from": "co",
+            "to": "pin:review",
+            "kind": "default",
+            "label": "reads to review",
+            "conds": [],
+            "note": "",
+            "fromSide": "",
+            "toSide": ""
+          },
+          {
+            "id": "o5",
+            "from": "co",
+            "to": "ock",
+            "kind": "default",
+            "label": "after each review",
+            "conds": [],
+            "note": "",
+            "fromSide": "",
+            "toSide": ""
+          },
+          {
+            "id": "okeep",
+            "from": "ock",
+            "to": "co",
+            "kind": "conditional",
+            "label": "room left → keep going",
+            "conds": [
+              "context has room"
+            ],
+            "note": "",
+            "fromSide": "",
+            "toSide": ""
+          },
+          {
+            "id": "ofull",
+            "from": "ock",
+            "to": "osp",
+            "kind": "conditional",
+            "label": "getting full",
+            "conds": [
+              "getting full OR losing track"
+            ],
+            "note": "",
+            "fromSide": "",
+            "toSide": "",
+            "badge": "orange"
+          },
+          {
+            "id": "osp2",
+            "from": "osp",
+            "to": "och",
+            "kind": "default",
+            "label": "safe point reached",
+            "conds": [],
+            "note": "",
+            "fromSide": "",
+            "toSide": "",
+            "badge": "cyan"
+          },
+          {
+            "id": "ocont",
+            "from": "och",
+            "to": "co",
+            "kind": "default",
+            "label": "compacted → continue",
+            "conds": [],
+            "note": "",
+            "fromSide": "",
+            "toSide": "",
+            "badge": "red"
+          },
+          {
+            "id": "otake",
+            "from": "och",
+            "to": "co",
+            "kind": "default",
+            "label": "O02 takes over",
+            "conds": [],
+            "note": "OWNER is now O02; O01 stops and is archived.",
+            "fromSide": "",
+            "toSide": "",
+            "badge": "pink"
+          }
+        ],
+        "pins": {
+          "task": {
+            "x": -440,
+            "y": -110
+          },
+          "replace": {
+            "x": -440,
+            "y": -10
+          },
+          "result": {
+            "x": -440,
+            "y": 90
+          },
+          "review": {
+            "x": 16,
+            "y": -230
+          }
+        },
+        "spread": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "tags": [],
+      "type": "group",
+      "w": 260,
+      "x": -274,
+      "y": 158
+    },
+    {
+      "comments": [],
+      "desc": "Worker chats rotate here (M##_H##). Same loop as the orchestrator.",
+      "h": 150,
+      "id": "slot",
+      "name": "Worker Thread",
+      "path": "",
+      "rules": [],
+      "sub": {
+        "nodes": [
+          {
+            "id": "cw",
+            "type": "agent",
+            "x": 0,
+            "y": 0,
+            "w": 240,
+            "h": 120,
+            "name": "Worker · M01_H00 - ui improvement",
+            "desc": "Works the task from the orchestrator. Tags every commit [M01_H00].",
+            "path": "",
+            "tags": [
+              "tests via subagent"
+            ],
+            "rules": [
+              {
+                "if": [
+                  "the orchestrator asks you to pause"
+                ],
+                "then": "finish the step at a safe spot, commit, add a checkpoint line, reply with commit hash + step, then wait"
+              },
+              {
+                "if": [
+                  "running tests, reading logs or exploring"
+                ],
+                "then": "hand it to a subagent and keep only its summary"
+              },
+              {
+                "if": [
+                  "the task is finished"
+                ],
+                "then": "send the result; add \"compacted: replace me\" if you compacted"
+              }
+            ],
+            "comments": [],
+            "provider": "codex",
+            "model": "gpt-6-sol",
+            "effort": "high"
+          },
+          {
+            "id": "wck",
+            "type": "decision",
+            "x": 600,
+            "y": 24,
+            "w": 208,
+            "h": 96,
+            "name": "Context check",
+            "desc": "After each step. Codex measures room (/status).",
+            "path": "",
+            "tags": [
+              "by: worker"
+            ],
+            "rules": [],
+            "comments": []
+          },
+          {
+            "id": "wsp",
+            "type": "group",
+            "x": 576,
+            "y": 420,
+            "w": 250,
+            "h": 130,
+            "name": "① Safe point",
+            "desc": "Finish the step, commit, add a checkpoint line.",
+            "path": "",
+            "tags": [],
+            "rules": [],
+            "comments": [],
+            "sub": {
+              "nodes": [
+                {
+                  "id": "cp",
+                  "type": "decision",
+                  "x": 0,
+                  "y": 0,
+                  "w": 208,
+                  "h": 96,
+                  "name": "At a safe point?",
+                  "desc": "Current step finished, no half-done edit.",
+                  "path": "",
+                  "tags": [],
+                  "rules": [],
+                  "comments": []
+                },
+                {
+                  "id": "kw",
+                  "type": "note",
+                  "x": 0,
+                  "y": 260,
+                  "w": 216,
+                  "h": 88,
+                  "name": "Finish the current step",
+                  "desc": "Then check again. Start nothing new.",
+                  "path": "",
+                  "tags": [],
+                  "rules": [],
+                  "comments": []
+                },
+                {
+                  "id": "cm",
+                  "type": "tool",
+                  "x": 400,
+                  "y": -4,
+                  "w": 216,
+                  "h": 88,
+                  "name": "Commit + checkpoint",
+                  "desc": "Commit as [M01_H00]; add a checkpoint line to progress.md.",
+                  "path": "",
+                  "tags": [
+                    "git"
+                  ],
+                  "rules": [],
+                  "comments": []
+                }
+              ],
+              "edges": [
+                {
+                  "id": "s0",
+                  "from": "pin:wfull",
+                  "to": "cp",
+                  "kind": "default",
+                  "label": "",
+                  "conds": [],
+                  "note": "",
+                  "fromSide": "",
+                  "toSide": ""
+                },
+                {
+                  "id": "s1",
+                  "from": "cp",
+                  "to": "cm",
+                  "kind": "conditional",
+                  "label": "yes",
+                  "conds": [
+                    "current step finished"
+                  ],
+                  "note": "",
+                  "fromSide": "",
+                  "toSide": ""
+                },
+                {
+                  "id": "s2",
+                  "from": "cp",
+                  "to": "kw",
+                  "kind": "default",
+                  "label": "no",
+                  "conds": [],
+                  "note": "",
+                  "fromSide": "",
+                  "toSide": ""
+                },
+                {
+                  "id": "s3",
+                  "from": "kw",
+                  "to": "cp",
+                  "kind": "default",
+                  "label": "check again",
+                  "conds": [],
+                  "note": "",
+                  "fromSide": "",
+                  "toSide": ""
+                },
+                {
+                  "id": "s4",
+                  "from": "cm",
+                  "to": "pin:wsp2",
+                  "kind": "default",
+                  "label": "done",
+                  "conds": [],
+                  "note": "",
+                  "fromSide": "",
+                  "toSide": ""
+                }
+              ],
+              "pins": {
+                "wfull": {
+                  "x": -420,
+                  "y": 4
+                },
+                "wsp2": {
+                  "x": 780,
+                  "y": 4
+                }
+              },
+              "spread": {
+                "x": 0,
+                "y": 0
+              }
+            }
+          },
+          {
+            "id": "wch",
+            "type": "group",
+            "x": 0,
+            "y": 480,
+            "w": 250,
+            "h": 130,
+            "name": "② Compact or hand over",
+            "desc": "Compact once; next time write the handoff doc and send it to the orchestrator.",
+            "path": "",
+            "tags": [],
+            "rules": [],
+            "comments": [],
+            "sub": {
+              "nodes": [
+                {
+                  "id": "cq",
+                  "type": "decision",
+                  "x": 0,
+                  "y": 0,
+                  "w": 208,
+                  "h": 96,
+                  "name": "Compacted yet?",
+                  "desc": "A COMPACTED: n line in the summary = yes. Losing track also counts as yes.",
+                  "path": "",
+                  "tags": [],
+                  "rules": [],
+                  "comments": []
+                },
+                {
+                  "id": "cmp",
+                  "type": "tool",
+                  "x": 400,
+                  "y": -220,
+                  "w": 216,
+                  "h": 88,
+                  "name": "Compact (/compact)",
+                  "desc": "Once, at this safe point. Codex may also compact on its own.",
+                  "path": "",
+                  "tags": [
+                    "by: worker"
+                  ],
+                  "rules": [],
+                  "comments": []
+                },
+                {
+                  "id": "hd",
+                  "type": "memory",
+                  "x": 400,
+                  "y": 220,
+                  "w": 216,
+                  "h": 88,
+                  "name": "Write handoff doc",
+                  "desc": "handoffs/M01_H00-<name>.md: short, points to progress.md.",
+                  "path": "",
+                  "tags": [],
+                  "rules": [],
+                  "comments": []
+                }
+              ],
+              "edges": [
+                {
+                  "id": "d0",
+                  "from": "pin:wsp2",
+                  "to": "cq",
+                  "kind": "default",
+                  "label": "",
+                  "conds": [],
+                  "note": "",
+                  "fromSide": "",
+                  "toSide": ""
+                },
+                {
+                  "id": "d1",
+                  "from": "cq",
+                  "to": "cmp",
+                  "kind": "conditional",
+                  "label": "no → compact once",
+                  "conds": [
+                    "not compacted yet"
+                  ],
+                  "note": "",
+                  "fromSide": "",
+                  "toSide": ""
+                },
+                {
+                  "id": "d2",
+                  "from": "cmp",
+                  "to": "pin:wcont",
+                  "kind": "default",
+                  "label": "continue",
+                  "conds": [],
+                  "note": "",
+                  "fromSide": "",
+                  "toSide": ""
+                },
+                {
+                  "id": "d4",
+                  "from": "cq",
+                  "to": "hd",
+                  "kind": "conditional",
+                  "label": "yes → hand over",
+                  "conds": [
+                    "already compacted OR losing track"
+                  ],
+                  "note": "",
+                  "fromSide": "",
+                  "toSide": ""
+                },
+                {
+                  "id": "d5",
+                  "from": "hd",
+                  "to": "pin:whand",
+                  "kind": "default",
+                  "label": "send",
+                  "conds": [],
+                  "note": "",
+                  "fromSide": "",
+                  "toSide": ""
+                }
+              ],
+              "pins": {
+                "wsp2": {
+                  "x": -420,
+                  "y": 4
+                },
+                "wcont": {
+                  "x": 780,
+                  "y": -206
+                },
+                "whand": {
+                  "x": 780,
+                  "y": 236
+                }
+              },
+              "spread": {
+                "x": 0,
+                "y": 0
+              }
+            }
+          },
+          {
+            "id": "fw",
+            "type": "agent",
+            "x": -500,
+            "y": -330,
+            "w": 240,
+            "h": 120,
+            "name": "Fresh worker · M01_H01",
+            "desc": "Started by the orchestrator. Reads the latest handoff doc (if any) first.",
+            "path": "",
+            "tags": [],
+            "rules": [],
+            "comments": [],
+            "provider": "codex",
+            "model": "gpt-6-sol",
+            "effort": "high"
+          }
+        ],
+        "edges": [
+          {
+            "id": "i1",
+            "from": "pin:task",
+            "to": "cw",
+            "kind": "default",
+            "label": "task",
+            "conds": [],
+            "note": "",
+            "fromSide": "",
+            "toSide": ""
+          },
+          {
+            "id": "i2",
+            "from": "cw",
+            "to": "pin:edits",
+            "kind": "default",
+            "label": "reads + edits",
+            "conds": [],
+            "note": "",
+            "fromSide": "",
+            "toSide": ""
+          },
+          {
+            "id": "i3",
+            "from": "cw",
+            "to": "wck",
+            "kind": "default",
+            "label": "after each step",
+            "conds": [],
+            "note": "",
+            "fromSide": "",
+            "toSide": ""
+          },
+          {
+            "id": "wkeep",
+            "from": "wck",
+            "to": "cw",
+            "kind": "conditional",
+            "label": "room left → keep working",
+            "conds": [
+              "task not finished AND room left"
+            ],
+            "note": "",
+            "fromSide": "",
+            "toSide": ""
+          },
+          {
+            "id": "wdone",
+            "from": "wck",
+            "to": "pin:result",
+            "kind": "conditional",
+            "label": "task finished → result",
+            "conds": [
+              "task finished"
+            ],
+            "note": "",
+            "fromSide": "",
+            "toSide": ""
+          },
+          {
+            "id": "wfull",
+            "from": "wck",
+            "to": "wsp",
+            "kind": "conditional",
+            "label": "getting full",
+            "conds": [
+              "getting full OR losing track"
+            ],
+            "note": "",
+            "fromSide": "",
+            "toSide": "",
+            "badge": "orange"
+          },
+          {
+            "id": "wsp2",
+            "from": "wsp",
+            "to": "wch",
+            "kind": "default",
+            "label": "safe point reached",
+            "conds": [],
+            "note": "",
+            "fromSide": "",
+            "toSide": "",
+            "badge": "cyan"
+          },
+          {
+            "id": "wcont",
+            "from": "wch",
+            "to": "cw",
+            "kind": "default",
+            "label": "compacted → continue",
+            "conds": [],
+            "note": "",
+            "fromSide": "",
+            "toSide": "",
+            "badge": "red"
+          },
+          {
+            "id": "whand",
+            "from": "wch",
+            "to": "pin:result",
+            "kind": "default",
+            "label": "handoff doc → orchestrator",
+            "conds": [],
+            "note": "",
+            "fromSide": "",
+            "toSide": "",
+            "badge": "pink"
+          },
+          {
+            "id": "i7",
+            "from": "pin:replace",
+            "to": "fw",
+            "kind": "default",
+            "label": "reads handoff doc (if any)",
+            "conds": [],
+            "note": "",
+            "fromSide": "",
+            "toSide": ""
+          },
+          {
+            "id": "i8",
+            "from": "fw",
+            "to": "cw",
+            "kind": "default",
+            "label": "takes over",
+            "conds": [],
+            "note": "",
+            "fromSide": "",
+            "toSide": ""
+          }
+        ],
+        "pins": {
+          "task": {
+            "x": -500,
+            "y": -40
+          },
+          "result": {
+            "x": -500,
+            "y": 200
+          },
+          "replace": {
+            "x": -500,
+            "y": -500
+          },
+          "edits": {
+            "x": 16,
+            "y": -230
+          }
+        },
+        "spread": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      "tags": [],
+      "type": "group",
+      "w": 260,
+      "x": 396,
+      "y": 160
+    },
+    {
+      "comments": [],
+      "desc": "AGENTS.md (naming + context rules) · milestones.md · progress.md · handoffs/ · .codex/config.toml (compact_prompt)",
+      "h": 160,
+      "id": "repo",
+      "name": "my-app",
+      "path": "~/code/my-app",
+      "rules": [],
+      "tags": [],
+      "type": "folder",
+      "w": 216,
+      "x": 839,
+      "y": 176
+    }
+  ],
+  "notes": "v9-claude: Claude's recommended version of v8.\nBoth threads use the same loop: Agent → Context check → ① Safe point → ② Compact or hand over → back.\nColours mean the same thing everywhere: blue task · green result · violet start fresh worker · orange getting full · cyan safe point reached · red compacted → continue · pink hand over / takes over · yellow handover check.\nBoxes stay short; detail is in each box's Details panel (rules, descriptions, link notes).\nprogress.md is the single source of truth (OWNER line, checkpoints, log). Noisy work (tests, logs, big reviews) goes to subagents.\nNames: 00 - Orchestrator O## · workers M##_H## - milestone name.",
+  "rules": [],
+  "spread": {
+    "x": 0,
+    "y": 3
+  }
+}

@@ -142,54 +142,54 @@
             "toSide": ""
           },
           {
-            "id": "h1",
-            "from": "ochk",
-            "to": "sp",
-            "kind": "conditional",
-            "label": "getting full → reach a safe point",
+            "badge": "orange",
             "conds": [
               "context getting full OR work quality slipping"
             ],
-            "note": "",
+            "from": "ochk",
             "fromSide": "",
-            "toSide": "",
-            "badge": "orange"
+            "id": "h1",
+            "kind": "conditional",
+            "label": "getting full → reach a safe point",
+            "note": "",
+            "to": "sp",
+            "toSide": ""
           },
           {
-            "id": "spout",
+            "badge": "cyan",
+            "conds": [],
             "from": "sp",
-            "to": "ch",
+            "fromSide": "",
+            "id": "spout",
             "kind": "default",
             "label": "safe point reached + committed",
-            "conds": [],
             "note": "The orchestrator's own work is at a safe point, any active worker has saved and paused, and progress.md is committed.",
-            "fromSide": "",
-            "toSide": "",
-            "badge": "cyan"
+            "to": "ch",
+            "toSide": ""
           },
           {
-            "id": "chc",
+            "badge": "red",
+            "conds": [],
             "from": "ch",
-            "to": "co",
+            "fromSide": "",
+            "id": "chc",
             "kind": "default",
             "label": "compacted → continue",
-            "conds": [],
             "note": "Same orchestrator carries on after compacting; a paused worker has been told to resume.",
-            "fromSide": "",
-            "toSide": "",
-            "badge": "red"
+            "to": "co",
+            "toSide": ""
           },
           {
-            "id": "cht",
+            "badge": "pink",
+            "conds": [],
             "from": "ch",
-            "to": "co",
+            "fromSide": "",
+            "id": "cht",
             "kind": "default",
             "label": "handover passed → O02 takes over",
-            "conds": [],
             "note": "OWNER is now O02; O01 stops and is archived.",
-            "fromSide": "",
-            "toSide": "",
-            "badge": "pink"
+            "to": "co",
+            "toSide": ""
           }
         ],
         "nodes": [
@@ -197,7 +197,7 @@
             "comments": [],
             "desc": "Pinned chat. On a handover only its O code changes (O01 → O02). Plans the work from milestones.md, names and starts every worker, reviews each result, and keeps progress.md up to date. Tells you each new worker's exact name. After each review it checks its context room.",
             "effort": "high",
-            "h": 160,
+            "h": 256,
             "id": "co",
             "model": "gpt-6-astra",
             "name": "Current orchestrator · 00 - Orchestrator O01",
@@ -258,7 +258,7 @@
           {
             "comments": [],
             "desc": "Checked by the orchestrator itself, following AGENTS.md. Context room = measured by Codex (code), not the AI: /status shows what is left.",
-            "h": 120,
+            "h": 208,
             "id": "ochk",
             "name": "Context check (after each review)",
             "path": "",
@@ -269,8 +269,8 @@
             ],
             "type": "decision",
             "w": 200,
-            "x": 440,
-            "y": -8
+            "x": 608,
+            "y": 24
           },
           {
             "comments": [],
@@ -513,8 +513,8 @@
             "tags": [],
             "type": "group",
             "w": 260,
-            "x": 900,
-            "y": -8
+            "x": 576,
+            "y": 504
           },
           {
             "comments": [],
@@ -642,6 +642,7 @@
                   "h": 96,
                   "id": "cq",
                   "name": "Compacted yet this task?",
+                  "path": "",
                   "rules": [],
                   "tags": [],
                   "type": "decision",
@@ -956,8 +957,8 @@
             "tags": [],
             "type": "group",
             "w": 260,
-            "x": 900,
-            "y": 420
+            "x": 0,
+            "y": 584
           }
         ],
         "pins": {
@@ -1347,6 +1348,7 @@
                   "h": 96,
                   "id": "cq",
                   "name": "Compacted yet this task?",
+                  "path": "",
                   "rules": [],
                   "tags": [],
                   "type": "decision",
@@ -1447,7 +1449,7 @@
     {
       "comments": [],
       "desc": "AGENTS.md (naming + context rules) · milestones.md · progress.md · handoffs/ · .codex/config.toml (compact_prompt)",
-      "h": 120,
+      "h": 160,
       "id": "repo",
       "name": "my-app",
       "path": "~/code/my-app",
