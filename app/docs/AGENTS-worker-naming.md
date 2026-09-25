@@ -57,11 +57,15 @@ A fresh worker reads the most recent handoff doc for its milestone before doing 
 The orchestrator follows the same context rule as workers: compact once, then hand off.
 - `O##` = orchestrator handover number, two digits. The first orchestrator is `O01`.
 - After each review, check the context room (Codex measures it; `/status` shows what is left).
-- Getting full, and you have not compacted yet: at a safe point (the current review or hand-out is
-  finished and `progress.md` is up to date), commit `progress.md` as `[O01] ...`, then run `/compact`
-  and carry on.
+- At a safe point (the current review or hand-out is finished and `progress.md` is up to date),
+  check whether a worker is mid-task. If one is, tell it: "Find a safe spot, commit your work, add a
+  checkpoint line to `progress.md`, then stop and wait so you can resume." Wait for its reply (commit
+  hash + current step) before going on. Remind it if it hasn't replied.
+- Getting full, and you have not compacted yet: commit `progress.md` as `[O01] ...`, run `/compact`,
+  then tell a paused worker to resume from its checkpoint and carry on.
 - Getting full again after compacting, or losing track of milestones or worker names: at the next
-  safe point, commit `progress.md`, then write `handoffs/O01-orchestrator.md` with these sections:
+  safe point (worker paused as above), commit `progress.md`, then write `handoffs/O01-orchestrator.md`
+  (including the paused worker's name, commit hash and current step) with these sections:
   **Milestone status** · **Active worker + ID** · **Open reviews** · **Next steps** · **Key decisions**.
 - Tell the user the next orchestrator's exact name (`00 - Orchestrator O02`) on one line.
 - A fresh orchestrator reads the latest orchestrator handoff doc and `progress.md` before doing
@@ -71,8 +75,8 @@ The orchestrator follows the same context rule as workers: compact once, then ha
 - The first line of `progress.md` names the owner: `OWNER: 00 - Orchestrator O01`. Only the owner
   sends tasks, starts workers or accepts results. Any other orchestrator does none of these.
 - **Handover-only mode:** once the old orchestrator has written its handoff doc, it does no more
-  reviews and sends no new tasks. It stays active only to answer handover questions. The worker
-  finishes its current step and pauses until the owner changes.
+  reviews and sends no new tasks. It stays active only to answer handover questions. The worker is
+  already paused (from the safe-point check) and resumes only when the new owner tells it to.
 - **Handover check** (old O01 and new O02 are both active):
   1. O02 restates: milestone `M##`, active worker name and state, open reviews, next step.
   2. O02 messages the paused worker: "Your orchestrator is now 00 - Orchestrator O02. Reply with
@@ -82,6 +86,13 @@ The orchestrator follows the same context rule as workers: compact once, then ha
        handover. The worker resumes with O02. O01 stops and is archived.
      - Mismatch: O01 tells O02 exactly what is missing or wrong, then they repeat from step 1.
        At most 2 fix rounds. If it still fails, both stop and tell the user what doesn't match.
+
+### When the orchestrator asks you to pause
+1. Finish the current step at a safe spot. Never stop in the middle of an edit.
+2. Commit your work as `[M##_H##] ...` and add a checkpoint line to `progress.md`: done so far, next
+   step, files touched.
+3. Reply with your commit hash and current step, then stop and wait.
+4. Resume only when your orchestrator (the one named as OWNER in `progress.md`) tells you to.
 
 ### Housekeeping
 - Archive a worker's chat once its work is accepted or handed off.
