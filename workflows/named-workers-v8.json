@@ -283,89 +283,6 @@
                   "toSide": ""
                 },
                 {
-                  "conds": [
-                    "not compacted yet this task"
-                  ],
-                  "from": "cq",
-                  "fromSide": "",
-                  "id": "q1",
-                  "kind": "conditional",
-                  "label": "no → compact once",
-                  "note": "",
-                  "to": "cmp",
-                  "toSide": ""
-                },
-                {
-                  "conds": [
-                    "already compacted this task OR work quality slipping"
-                  ],
-                  "from": "cq",
-                  "fromSide": "",
-                  "id": "q2",
-                  "kind": "conditional",
-                  "label": "yes → hand off",
-                  "note": "",
-                  "to": "hd",
-                  "toSide": ""
-                },
-                {
-                  "conds": [],
-                  "from": "cmp",
-                  "fromSide": "",
-                  "id": "c1",
-                  "kind": "default",
-                  "label": "then",
-                  "note": "",
-                  "to": "wr",
-                  "toSide": ""
-                },
-                {
-                  "conds": [],
-                  "from": "hd",
-                  "fromSide": "",
-                  "id": "hdfo",
-                  "kind": "default",
-                  "label": "handoff doc → fresh orchestrator created",
-                  "note": "The old orchestrator (O01) stays active in handover-only mode and sends O02 the handoff doc plus a review prompt.",
-                  "to": "fo",
-                  "toSide": ""
-                },
-                {
-                  "badge": "yellow",
-                  "conds": [],
-                  "from": "fo",
-                  "fromSide": "",
-                  "id": "ohc",
-                  "kind": "default",
-                  "label": "runs the handover check",
-                  "note": "O01 is still active in handover-only mode until this passes.",
-                  "to": "hc",
-                  "toSide": ""
-                },
-                {
-                  "badge": "green",
-                  "conds": [],
-                  "from": "hc",
-                  "fromSide": "",
-                  "id": "hcout",
-                  "kind": "default",
-                  "label": "passes → takes over",
-                  "note": "",
-                  "to": "pin:otake",
-                  "toSide": ""
-                },
-                {
-                  "conds": [],
-                  "from": "wr",
-                  "fromSide": "",
-                  "id": "wr1",
-                  "kind": "default",
-                  "label": "continue",
-                  "note": "",
-                  "to": "pin:ocont",
-                  "toSide": ""
-                },
-                {
                   "badge": "violet",
                   "conds": [],
                   "from": "sp",
@@ -374,8 +291,32 @@
                   "kind": "default",
                   "label": "safe point reached + committed",
                   "note": "The orchestrator's own work is at a safe point, any active worker has saved and paused, and progress.md is committed.",
-                  "to": "cq",
+                  "to": "ch",
                   "toSide": ""
+                },
+                {
+                  "id": "chc",
+                  "from": "ch",
+                  "to": "pin:ocont",
+                  "kind": "default",
+                  "label": "compacted → continue",
+                  "conds": [],
+                  "note": "Same orchestrator carries on after compacting; a paused worker has been told to resume.",
+                  "fromSide": "",
+                  "toSide": "",
+                  "badge": "red"
+                },
+                {
+                  "id": "cht",
+                  "from": "ch",
+                  "to": "pin:otake",
+                  "kind": "default",
+                  "label": "handover passed → O02 takes over",
+                  "conds": [],
+                  "note": "OWNER is now O02; O01 stops and is archived.",
+                  "fromSide": "",
+                  "toSide": "",
+                  "badge": "pink"
                 }
               ],
               "nodes": [
@@ -499,14 +440,14 @@
                         "toSide": ""
                       },
                       {
-                        "id": "cm1",
+                        "conds": [],
                         "from": "cm",
-                        "to": "pin:spout",
+                        "fromSide": "",
+                        "id": "cm1",
                         "kind": "default",
                         "label": "then",
-                        "conds": [],
                         "note": "",
-                        "fromSide": "",
+                        "to": "pin:spout",
                         "toSide": ""
                       }
                     ],
@@ -624,328 +565,460 @@
                   "y": 0
                 },
                 {
-                  "comments": [],
-                  "desc": "handoffs/O01-orchestrator.md (named after the orchestrator writing it). Sections: Milestone status, Active worker + ID, Open reviews, Next steps, Key decisions. Includes the paused worker's name, commit hash and current step.",
-                  "h": 104,
-                  "id": "hd",
-                  "name": "Write handoff doc",
-                  "path": "",
-                  "rules": [],
-                  "tags": [],
-                  "type": "memory",
-                  "w": 216,
-                  "x": 780,
-                  "y": 190
-                },
-                {
-                  "comments": [],
-                  "desc": "The orchestrator reads its summary: a COMPACTED: n line means yes. Quality slipping (re-reviewing, losing track of milestones or worker names) counts as yes.",
-                  "h": 96,
-                  "id": "cq",
-                  "name": "Compacted yet this task?",
-                  "rules": [],
-                  "tags": [],
-                  "type": "decision",
-                  "w": 208,
-                  "x": 400,
-                  "y": -4
-                },
-                {
-                  "comments": [],
-                  "desc": "The orchestrator runs /compact now, at this safe point. If Codex already compacted on its own, that counts as the one compaction.",
-                  "h": 120,
-                  "id": "cmp",
-                  "name": "Compact the chat (at a safe point)",
-                  "path": "",
-                  "rules": [],
-                  "tags": [
-                    "by: worker (/compact)",
-                    "or: Codex (automatic)"
-                  ],
-                  "type": "tool",
-                  "w": 232,
-                  "x": 780,
-                  "y": -190
-                },
-                {
-                  "comments": [],
-                  "desc": "Created in a new chat (how is up to you, for now). Reads the latest orchestrator handoff doc and progress.md, then runs the handover check with the old orchestrator, which stays active until it passes.",
-                  "effort": "high",
-                  "h": 144,
-                  "id": "fo",
-                  "model": "gpt-6-astra",
-                  "name": "Fresh orchestrator · 00 - Orchestrator O02",
-                  "path": "",
-                  "provider": "codex",
-                  "rules": [],
-                  "tags": [],
-                  "type": "agent",
-                  "w": 240,
-                  "x": 1140,
-                  "y": 176
-                },
-                {
-                  "comments": [],
-                  "desc": "Old and new orchestrator overlap briefly: 3 quick checks, then ownership moves to the new one.",
+                  "id": "ch",
+                  "type": "group",
+                  "x": 600,
+                  "y": 0,
+                  "w": 260,
                   "h": 150,
-                  "id": "hc",
-                  "name": "Handover check",
+                  "name": "Compact or hand over",
+                  "desc": "First time: compact once and tell the paused worker to resume. Already compacted (or quality slipping): write the handoff doc, start a fresh orchestrator and run the handover check.",
                   "path": "",
+                  "tags": [],
                   "rules": [],
+                  "comments": [],
                   "sub": {
-                    "edges": [
-                      {
-                        "conds": [],
-                        "from": "pin:ohc",
-                        "fromSide": "",
-                        "id": "hc0",
-                        "kind": "default",
-                        "label": "start the check",
-                        "note": "",
-                        "to": "h1",
-                        "toSide": ""
-                      },
-                      {
-                        "conds": [],
-                        "from": "h1",
-                        "fromSide": "",
-                        "id": "hc1",
-                        "kind": "default",
-                        "label": "then",
-                        "note": "",
-                        "to": "h2",
-                        "toSide": ""
-                      },
-                      {
-                        "conds": [],
-                        "from": "h2",
-                        "fromSide": "",
-                        "id": "hc2",
-                        "kind": "default",
-                        "label": "O01 reviews",
-                        "note": "",
-                        "to": "hq",
-                        "toSide": ""
-                      },
-                      {
-                        "conds": [
-                          "restatement and worker reply both match"
-                        ],
-                        "from": "hq",
-                        "fromSide": "",
-                        "id": "hc3",
-                        "kind": "conditional",
-                        "label": "yes → hand over",
-                        "note": "",
-                        "to": "h3",
-                        "toSide": ""
-                      },
-                      {
-                        "conds": [],
-                        "from": "h3",
-                        "fromSide": "",
-                        "id": "hc4",
-                        "kind": "default",
-                        "label": "O02 takes over",
-                        "note": "",
-                        "to": "pin:hcout",
-                        "toSide": ""
-                      },
-                      {
-                        "conds": [
-                          "mismatch AND fewer than 2 fix rounds"
-                        ],
-                        "from": "hq",
-                        "fromSide": "",
-                        "id": "hc5",
-                        "kind": "conditional",
-                        "label": "no → fix",
-                        "note": "",
-                        "to": "hx",
-                        "toSide": ""
-                      },
-                      {
-                        "conds": [],
-                        "from": "hx",
-                        "fromSide": "",
-                        "id": "hc6",
-                        "kind": "default",
-                        "label": "re-check",
-                        "note": "",
-                        "to": "h1",
-                        "toSide": ""
-                      },
-                      {
-                        "conds": [
-                          "mismatch after 2 fix rounds"
-                        ],
-                        "from": "hq",
-                        "fromSide": "",
-                        "id": "hc7",
-                        "kind": "fallback",
-                        "label": "still failing",
-                        "note": "",
-                        "to": "he",
-                        "toSide": ""
-                      }
-                    ],
                     "nodes": [
                       {
                         "comments": [],
-                        "desc": "Until the check passes, the old orchestrator only answers handover questions: no reviews, no new tasks. The worker is already paused (it was told to save and stop at the safe-point check), so no result lands with the wrong orchestrator.",
-                        "h": 120,
-                        "id": "hm",
-                        "name": "Handover-only mode (O01)",
+                        "desc": "handoffs/O01-orchestrator.md (named after the orchestrator writing it). Sections: Milestone status, Active worker + ID, Open reviews, Next steps, Key decisions. Includes the paused worker's name, commit hash and current step.",
+                        "h": 104,
+                        "id": "hd",
+                        "name": "Write handoff doc",
                         "path": "",
                         "rules": [],
                         "tags": [],
-                        "type": "note",
-                        "w": 232,
-                        "x": 0,
-                        "y": 280
-                      },
-                      {
-                        "comments": [],
-                        "desc": "Milestone M##, active worker name + state, open reviews, next step.",
-                        "h": 96,
-                        "id": "h1",
-                        "name": "1 · O02 restates the state",
-                        "path": "",
-                        "rules": [],
-                        "tags": [
-                          "by: O02"
-                        ],
-                        "type": "tool",
-                        "w": 216,
-                        "x": 0,
-                        "y": 0
-                      },
-                      {
-                        "comments": [],
-                        "desc": "\"Your orchestrator is now 00 - Orchestrator O02. Reply with your ID and current step.\"",
-                        "h": 96,
-                        "id": "h2",
-                        "name": "2 · O02 pings the paused worker",
-                        "path": "",
-                        "rules": [],
-                        "tags": [
-                          "by: O02"
-                        ],
-                        "type": "tool",
+                        "type": "memory",
                         "w": 216,
                         "x": 380,
-                        "y": 0
+                        "y": 194
                       },
                       {
                         "comments": [],
-                        "desc": "O01 compares the restatement and the worker's reply with what it knows.",
-                        "h": 100,
-                        "id": "hq",
-                        "name": "All match? (O01 checks)",
-                        "path": "",
+                        "desc": "The orchestrator reads its summary: a COMPACTED: n line means yes. Quality slipping (re-reviewing, losing track of milestones or worker names) counts as yes.",
+                        "h": 96,
+                        "id": "cq",
+                        "name": "Compacted yet this task?",
                         "rules": [],
                         "tags": [],
                         "type": "decision",
                         "w": 208,
-                        "x": 760,
-                        "y": -2
+                        "x": 0,
+                        "y": 0
                       },
                       {
                         "comments": [],
-                        "desc": "O02 writes OWNER: 00 - Orchestrator O02 at the top of progress.md and logs the handover. The worker resumes with O02; O01 stops and is archived.",
-                        "h": 96,
-                        "id": "h3",
-                        "name": "3 · OWNER → O02",
-                        "path": "",
-                        "rules": [],
-                        "tags": [
-                          "by: O02"
-                        ],
-                        "type": "tool",
-                        "w": 216,
-                        "x": 1160,
-                        "y": -200
-                      },
-                      {
-                        "comments": [],
-                        "desc": "O01 tells O02 exactly what is missing or wrong (and updates the handoff doc).",
-                        "h": 96,
-                        "id": "hx",
-                        "name": "O01 corrects the gaps",
-                        "path": "",
-                        "rules": [],
-                        "tags": [
-                          "by: O01"
-                        ],
-                        "type": "tool",
-                        "w": 216,
-                        "x": 760,
-                        "y": 300
-                      },
-                      {
-                        "comments": [],
-                        "desc": "After 2 fix rounds the check still fails: both stop and tell you exactly what doesn't match.",
+                        "desc": "The orchestrator runs /compact now, at this safe point. If Codex already compacted on its own, that counts as the one compaction.",
                         "h": 120,
-                        "id": "he",
-                        "name": "Stop and tell you",
+                        "id": "cmp",
+                        "name": "Compact the chat (at a safe point)",
                         "path": "",
+                        "rules": [],
+                        "tags": [
+                          "by: worker (/compact)",
+                          "or: Codex (automatic)"
+                        ],
+                        "type": "tool",
+                        "w": 232,
+                        "x": 380,
+                        "y": -186
+                      },
+                      {
+                        "comments": [],
+                        "desc": "Created in a new chat (how is up to you, for now). Reads the latest orchestrator handoff doc and progress.md, then runs the handover check with the old orchestrator, which stays active until it passes.",
+                        "effort": "high",
+                        "h": 144,
+                        "id": "fo",
+                        "model": "gpt-6-astra",
+                        "name": "Fresh orchestrator · 00 - Orchestrator O02",
+                        "path": "",
+                        "provider": "codex",
                         "rules": [],
                         "tags": [],
-                        "type": "note",
+                        "type": "agent",
+                        "w": 240,
+                        "x": 740,
+                        "y": 180
+                      },
+                      {
+                        "comments": [],
+                        "desc": "Old and new orchestrator overlap briefly: 3 quick checks, then ownership moves to the new one.",
+                        "h": 150,
+                        "id": "hc",
+                        "name": "Handover check",
+                        "path": "",
+                        "rules": [],
+                        "sub": {
+                          "edges": [
+                            {
+                              "conds": [],
+                              "from": "pin:ohc",
+                              "fromSide": "",
+                              "id": "hc0",
+                              "kind": "default",
+                              "label": "start the check",
+                              "note": "",
+                              "to": "h1",
+                              "toSide": ""
+                            },
+                            {
+                              "conds": [],
+                              "from": "h1",
+                              "fromSide": "",
+                              "id": "hc1",
+                              "kind": "default",
+                              "label": "then",
+                              "note": "",
+                              "to": "h2",
+                              "toSide": ""
+                            },
+                            {
+                              "conds": [],
+                              "from": "h2",
+                              "fromSide": "",
+                              "id": "hc2",
+                              "kind": "default",
+                              "label": "O01 reviews",
+                              "note": "",
+                              "to": "hq",
+                              "toSide": ""
+                            },
+                            {
+                              "conds": [
+                                "restatement and worker reply both match"
+                              ],
+                              "from": "hq",
+                              "fromSide": "",
+                              "id": "hc3",
+                              "kind": "conditional",
+                              "label": "yes → hand over",
+                              "note": "",
+                              "to": "h3",
+                              "toSide": ""
+                            },
+                            {
+                              "conds": [],
+                              "from": "h3",
+                              "fromSide": "",
+                              "id": "hc4",
+                              "kind": "default",
+                              "label": "O02 takes over",
+                              "note": "",
+                              "to": "pin:hcout",
+                              "toSide": ""
+                            },
+                            {
+                              "conds": [
+                                "mismatch AND fewer than 2 fix rounds"
+                              ],
+                              "from": "hq",
+                              "fromSide": "",
+                              "id": "hc5",
+                              "kind": "conditional",
+                              "label": "no → fix",
+                              "note": "",
+                              "to": "hx",
+                              "toSide": ""
+                            },
+                            {
+                              "conds": [],
+                              "from": "hx",
+                              "fromSide": "",
+                              "id": "hc6",
+                              "kind": "default",
+                              "label": "re-check",
+                              "note": "",
+                              "to": "h1",
+                              "toSide": ""
+                            },
+                            {
+                              "conds": [
+                                "mismatch after 2 fix rounds"
+                              ],
+                              "from": "hq",
+                              "fromSide": "",
+                              "id": "hc7",
+                              "kind": "fallback",
+                              "label": "still failing",
+                              "note": "",
+                              "to": "he",
+                              "toSide": ""
+                            }
+                          ],
+                          "nodes": [
+                            {
+                              "comments": [],
+                              "desc": "Until the check passes, the old orchestrator only answers handover questions: no reviews, no new tasks. The worker is already paused (it was told to save and stop at the safe-point check), so no result lands with the wrong orchestrator.",
+                              "h": 120,
+                              "id": "hm",
+                              "name": "Handover-only mode (O01)",
+                              "path": "",
+                              "rules": [],
+                              "tags": [],
+                              "type": "note",
+                              "w": 232,
+                              "x": 0,
+                              "y": 280
+                            },
+                            {
+                              "comments": [],
+                              "desc": "Milestone M##, active worker name + state, open reviews, next step.",
+                              "h": 96,
+                              "id": "h1",
+                              "name": "1 · O02 restates the state",
+                              "path": "",
+                              "rules": [],
+                              "tags": [
+                                "by: O02"
+                              ],
+                              "type": "tool",
+                              "w": 216,
+                              "x": 0,
+                              "y": 0
+                            },
+                            {
+                              "comments": [],
+                              "desc": "\"Your orchestrator is now 00 - Orchestrator O02. Reply with your ID and current step.\"",
+                              "h": 96,
+                              "id": "h2",
+                              "name": "2 · O02 pings the paused worker",
+                              "path": "",
+                              "rules": [],
+                              "tags": [
+                                "by: O02"
+                              ],
+                              "type": "tool",
+                              "w": 216,
+                              "x": 380,
+                              "y": 0
+                            },
+                            {
+                              "comments": [],
+                              "desc": "O01 compares the restatement and the worker's reply with what it knows.",
+                              "h": 100,
+                              "id": "hq",
+                              "name": "All match? (O01 checks)",
+                              "path": "",
+                              "rules": [],
+                              "tags": [],
+                              "type": "decision",
+                              "w": 208,
+                              "x": 760,
+                              "y": -2
+                            },
+                            {
+                              "comments": [],
+                              "desc": "O02 writes OWNER: 00 - Orchestrator O02 at the top of progress.md and logs the handover. The worker resumes with O02; O01 stops and is archived.",
+                              "h": 96,
+                              "id": "h3",
+                              "name": "3 · OWNER → O02",
+                              "path": "",
+                              "rules": [],
+                              "tags": [
+                                "by: O02"
+                              ],
+                              "type": "tool",
+                              "w": 216,
+                              "x": 1160,
+                              "y": -200
+                            },
+                            {
+                              "comments": [],
+                              "desc": "O01 tells O02 exactly what is missing or wrong (and updates the handoff doc).",
+                              "h": 96,
+                              "id": "hx",
+                              "name": "O01 corrects the gaps",
+                              "path": "",
+                              "rules": [],
+                              "tags": [
+                                "by: O01"
+                              ],
+                              "type": "tool",
+                              "w": 216,
+                              "x": 760,
+                              "y": 300
+                            },
+                            {
+                              "comments": [],
+                              "desc": "After 2 fix rounds the check still fails: both stop and tell you exactly what doesn't match.",
+                              "h": 120,
+                              "id": "he",
+                              "name": "Stop and tell you",
+                              "path": "",
+                              "rules": [],
+                              "tags": [],
+                              "type": "note",
+                              "w": 232,
+                              "x": 1160,
+                              "y": 220
+                            }
+                          ],
+                          "pins": {
+                            "hcout": {
+                              "x": 1540,
+                              "y": -182
+                            },
+                            "ohc": {
+                              "x": -420,
+                              "y": 4
+                            }
+                          },
+                          "spread": {
+                            "x": 0,
+                            "y": 0
+                          }
+                        },
+                        "tags": [],
+                        "type": "group",
+                        "w": 260,
+                        "x": 740,
+                        "y": 444
+                      },
+                      {
+                        "comments": [],
+                        "desc": "Only if a worker was paused: \"Carry on from your checkpoint.\" (On the handover path the new orchestrator does this instead, after the handover check.)",
+                        "h": 120,
+                        "id": "wr",
+                        "name": "Tell the worker to resume",
+                        "path": "",
+                        "rules": [],
+                        "tags": [
+                          "by: orchestrator"
+                        ],
+                        "type": "tool",
                         "w": 232,
-                        "x": 1160,
-                        "y": 220
+                        "x": 740,
+                        "y": -192
+                      }
+                    ],
+                    "edges": [
+                      {
+                        "conds": [
+                          "not compacted yet this task"
+                        ],
+                        "from": "cq",
+                        "fromSide": "",
+                        "id": "q1",
+                        "kind": "conditional",
+                        "label": "no → compact once",
+                        "note": "",
+                        "to": "cmp",
+                        "toSide": ""
+                      },
+                      {
+                        "conds": [
+                          "already compacted this task OR work quality slipping"
+                        ],
+                        "from": "cq",
+                        "fromSide": "",
+                        "id": "q2",
+                        "kind": "conditional",
+                        "label": "yes → hand off",
+                        "note": "",
+                        "to": "hd",
+                        "toSide": ""
+                      },
+                      {
+                        "conds": [],
+                        "from": "cmp",
+                        "fromSide": "",
+                        "id": "c1",
+                        "kind": "default",
+                        "label": "then",
+                        "note": "",
+                        "to": "wr",
+                        "toSide": ""
+                      },
+                      {
+                        "conds": [],
+                        "from": "hd",
+                        "fromSide": "",
+                        "id": "hdfo",
+                        "kind": "default",
+                        "label": "handoff doc → fresh orchestrator created",
+                        "note": "The old orchestrator (O01) stays active in handover-only mode and sends O02 the handoff doc plus a review prompt.",
+                        "to": "fo",
+                        "toSide": ""
+                      },
+                      {
+                        "badge": "yellow",
+                        "conds": [],
+                        "from": "fo",
+                        "fromSide": "",
+                        "id": "ohc",
+                        "kind": "default",
+                        "label": "runs the handover check",
+                        "note": "O01 is still active in handover-only mode until this passes.",
+                        "to": "hc",
+                        "toSide": ""
+                      },
+                      {
+                        "badge": "green",
+                        "conds": [],
+                        "from": "hc",
+                        "fromSide": "",
+                        "id": "hcout",
+                        "kind": "default",
+                        "label": "passes → takes over",
+                        "note": "",
+                        "to": "pin:cht",
+                        "toSide": ""
+                      },
+                      {
+                        "conds": [],
+                        "from": "wr",
+                        "fromSide": "",
+                        "id": "wr1",
+                        "kind": "default",
+                        "label": "continue",
+                        "note": "",
+                        "to": "pin:chc",
+                        "toSide": ""
+                      },
+                      {
+                        "id": "ch0",
+                        "from": "pin:spout",
+                        "to": "cq",
+                        "kind": "default",
+                        "label": "",
+                        "conds": [],
+                        "note": "",
+                        "fromSide": "",
+                        "toSide": ""
                       }
                     ],
                     "pins": {
-                      "hcout": {
-                        "x": 1540,
-                        "y": -182
+                      "spout": {
+                        "x": -380,
+                        "y": 14
                       },
-                      "ohc": {
-                        "x": -420,
-                        "y": 4
+                      "chc": {
+                        "x": 1120,
+                        "y": -156
+                      },
+                      "cht": {
+                        "x": 1500,
+                        "y": 474
                       }
                     },
                     "spread": {
                       "x": 0,
                       "y": 0
                     }
-                  },
-                  "tags": [],
-                  "type": "group",
-                  "w": 260,
-                  "x": 1140,
-                  "y": 440
-                },
-                {
-                  "comments": [],
-                  "desc": "Only if a worker was paused: \"Carry on from your checkpoint.\" (On the handover path the new orchestrator does this instead, after the handover check.)",
-                  "h": 120,
-                  "id": "wr",
-                  "name": "Tell the worker to resume",
-                  "path": "",
-                  "rules": [],
-                  "tags": [
-                    "by: orchestrator"
-                  ],
-                  "type": "tool",
-                  "w": 232,
-                  "x": 1140,
-                  "y": -196
+                  }
                 }
               ],
               "pins": {
                 "ocont": {
-                  "x": 1520,
-                  "y": -160
+                  "x": 1180,
+                  "y": -150
                 },
                 "otake": {
-                  "x": 1900,
-                  "y": 470
+                  "x": 1180,
+                  "y": 170
                 },
                 "otoho": {
-                  "x": -380,
+                  "x": -480,
                   "y": 14
                 }
               },
