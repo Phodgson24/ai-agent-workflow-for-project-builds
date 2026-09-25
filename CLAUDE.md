@@ -11,7 +11,8 @@ Read `app/docs/HANDOFF.md` first: it covers the user, the code map, setups, test
 - Before publishing, `Artifact read` the live page. If it changed since the last commit, merge first.
 
 ## Setups (app database)
-- **Main setup:** `namedworkersv5`, "user agent + project folder (named workers) v5" (31 boxes · 5 links). v4 copy plus a "Handover check" sub-flow on the Orchestrator Thread page (fresh orchestrator → check → takes over): OWNER line in progress.md, handover-only mode for the old orchestrator, 3-point check, max 2 fix rounds, then tell the user.
+- **Main setup:** `namedworkersv6`, "user agent + project folder (named workers) v6" (31 boxes · 5 links). v5 copy where Fresh orchestrator and Handover check moved inside the Orchestrator Thread's "Context full: compact or hand over" (exits: `ocont` continue, `otake` O02 takes over). The Orchestrator Thread page is now just orchestrator → context check → Context full.
+- v5: `namedworkersv5`, "user agent + project folder (named workers) v5" (31 boxes · 5 links). v4 copy plus a "Handover check" sub-flow on the Orchestrator Thread page (fresh orchestrator → check → takes over): OWNER line in progress.md, handover-only mode for the old orchestrator, 3-point check, max 2 fix rounds, then tell the user.
 - v4: `namedworkersv4`, "user agent + project folder (named workers) v4" (23 boxes · 5 links). v3 copy where the Orchestrator box became an "Orchestrator Thread" sub-flow (id still `orch`, so all links keep working) with its own "Context full" sub-flow; the user starts fresh orchestrator chats (00 - Orchestrator O01, O02…).
 - v3: `namedworkersv3`, "user agent + project folder (named workers) v3" (13 boxes · 5 links), kept unchanged. Built by Claude from v2 (`dhhsk0icnb92x7`): compaction moved into the handoff sub-flow, now "Context full: compact or hand off", with one shared safe-point check and commit.
 - v2 (`dhhsk0icnb92x7`) is the user's own save and is kept unchanged.
