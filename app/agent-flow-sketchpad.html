@@ -9,7 +9,7 @@
   --bg:#ECEEE9; --surface:#FFFFFF; --panel:#F6F7F3; --ink:#1A1E1B; --muted:#646B65; --line:#D3D8D0; --dot:#BCC2B9;
   --accent:#3346C9; --accent-ink:#FFFFFF; --edge:#5A625C; --flag-ink:#FFFFFF;
   --t-agent:#4453D1; --t-folder:#8A6A2E; --t-tool:#0B857A; --t-decision:#B26C06; --t-memory:#3A8233;
-  --t-human:#C23F66; --t-gate:#6B4FC0; --t-input:#56697A; --t-output:#2E3A44; --t-note:#C9A21B; --t-group:#7B858E;
+  --t-human:#C23F66; --t-gate:#6B4FC0; --t-step:#1D6F9E; --t-input:#56697A; --t-output:#2E3A44; --t-note:#C9A21B; --t-group:#7B858E;
   --r-rose:#C23F66; --r-amber:#B26C06; --r-indigo:#4453D1; --r-teal:#0B857A;
   --shadow:0 1px 2px rgba(20,30,20,.08),0 6px 18px rgba(20,30,20,.06);
   --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
@@ -21,7 +21,7 @@
     --bg:#131614; --surface:#1D211E; --panel:#181B19; --ink:#E4E8E2; --muted:#98A098; --line:#2F3530; --dot:#323933;
     --accent:#8E9BFF; --accent-ink:#10131A; --edge:#9AA39B; --flag-ink:#111412;
     --t-agent:#8390FF; --t-folder:#D6B270; --t-tool:#3CC5B6; --t-decision:#E7A33A; --t-memory:#7BC56E;
-    --t-human:#F07C9C; --t-gate:#B39BFF; --t-input:#93A8BA; --t-output:#C4CFD8; --t-note:#E3C24A; --t-group:#8E98A1;
+    --t-human:#F07C9C; --t-gate:#B39BFF; --t-step:#5DB3E6; --t-input:#93A8BA; --t-output:#C4CFD8; --t-note:#E3C24A; --t-group:#8E98A1;
     --r-rose:#F07C9C; --r-amber:#E7A33A; --r-indigo:#8390FF; --r-teal:#3CC5B6;
     --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.25);
   }
@@ -31,7 +31,7 @@
   --bg:#131614; --surface:#1D211E; --panel:#181B19; --ink:#E4E8E2; --muted:#98A098; --line:#2F3530; --dot:#323933;
   --accent:#8E9BFF; --accent-ink:#10131A; --edge:#9AA39B; --flag-ink:#111412;
   --t-agent:#8390FF; --t-folder:#D6B270; --t-tool:#3CC5B6; --t-decision:#E7A33A; --t-memory:#7BC56E;
-  --t-human:#F07C9C; --t-gate:#B39BFF; --t-input:#93A8BA; --t-output:#C4CFD8; --t-note:#E3C24A; --t-group:#8E98A1;
+  --t-human:#F07C9C; --t-gate:#B39BFF; --t-step:#5DB3E6; --t-input:#93A8BA; --t-output:#C4CFD8; --t-note:#E3C24A; --t-group:#8E98A1;
   --r-rose:#F07C9C; --r-amber:#E7A33A; --r-indigo:#8390FF; --r-teal:#3CC5B6;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.25);
 }
@@ -79,6 +79,7 @@ header{grid-column:1/-1;display:flex;align-items:center;gap:8px;flex-wrap:wrap;p
 .g-folder{height:10px;border-radius:1px 2px 2px 2px;clip-path:polygon(0 0,42% 0,52% 22%,100% 22%,100% 100%,0 100%)}
 .g-tool{clip-path:polygon(50% 0,100% 100%,0 100%)}
 .g-decision{transform:rotate(45deg) scale(.82);border-radius:1px}
+.g-step{height:8px;border-radius:4px}
 .g-gate{clip-path:polygon(0 0,100% 0,100% 55%,50% 100%,0 55%)}
 .g-memory{height:9px;border-radius:5px/3px;box-shadow:0 3px 0 -1px var(--tc)}
 .g-human{border-radius:50%}
@@ -521,6 +522,7 @@ const TYPES = {
   agent:    {label:'Agent',    name:'New agent',    hint:'Agent + model',         w:208, h:120},
   tool:     {label:'Tool',     name:'New tool',     hint:'API, function, MCP',    w:184, h:88},
   decision: {label:'Decision', name:'Decision',     hint:'Router, if / else',     w:184, h:88},
+  step:     {label:'Step',     name:'New step',     hint:'An action someone does', w:200, h:96},
   gate:     {label:'Quality gate', name:'Quality gate', hint:'Must pass every check', w:208, h:120},
   memory:   {label:'Memory',   name:'Memory',       hint:'Store, vector DB',      w:184, h:88},
   folder:   {label:'Folder',   name:'Project folder', hint:'Project or directory', w:200, h:88},
@@ -529,7 +531,7 @@ const TYPES = {
   note:     {label:'Note',     name:'Note',         hint:'Sticky comment',        w:200, h:120},
   group:    {label:'Group',    name:'Group',        hint:'Frame a sub-team',      w:420, h:260},
 };
-const BUILD = ['input','agent','tool','decision','gate','memory','folder','human','output'];
+const BUILD = ['input','agent','step','tool','decision','gate','memory','folder','human','output'];
 // Provider → models → effort levels. Edit this list to add or retire models.
 const EFFORT_LABELS = {low:'Low', medium:'Medium', high:'High', xhigh:'Extra high', max:'Max', default:'Default (not adjustable)'};
 const PROVIDERS = {
@@ -563,6 +565,8 @@ const SIDES = {'':'Auto', t:'Top', r:'Right', b:'Bottom', l:'Left'};
 // Operating system a project folder lives on (folder boxes only). The path hint follows the choice.
 const OSES = {'':'Not set', windows:'Windows', wsl:'WSL (Ubuntu on Windows)', linux:'Linux', macos:'macOS'};
 const OS_PATH_HINT = {'':'e.g. ~/code/my-project', windows:'e.g. C:\\Users\\you\\code\\my-project', wsl:'e.g. ~/code/my-project', linux:'e.g. ~/code/my-project', macos:'e.g. ~/code/my-project'};
+// Step: who does the action. Inside a thread's sub-flow this is usually that thread's agent.
+const DOERS = {'':'Not set', worker:'Worker', orchestrator:'Orchestrator', subagent:'Subagent', user:'User (you)'};
 // Quality gate: who makes sure the checks really pass. "self" = the agent checks its own work (nothing outside enforces it).
 const ENFORCERS = {'':'Not set', self:'Self-check (not enforced)', hook:'Hook (e.g. Codex Stop hook)', script:'Script / CI', orchestrator:'Orchestrator review', human:'Human'};
 const KINDS = {default:'Always', conditional:'Conditional', fallback:'Fallback / on error', async:'Async / background'};
@@ -644,7 +648,7 @@ function normNodes(list) {
     const o = fixAgent({
       id: String(n.id ?? uid()), type: n.type,
       provider: n.provider, model: n.model, effort: n.effort, path: String(n.path ?? ''), ...(OSES[n.os] && n.os ? {os: n.os} : {}),
-      ...(Array.isArray(n.checks) ? {checks: n.checks.map(String)} : {}), ...(ENFORCERS[n.enforce] && n.enforce ? {enforce: n.enforce} : {}),
+      ...(Array.isArray(n.checks) ? {checks: n.checks.map(String)} : {}), ...(ENFORCERS[n.enforce] && n.enforce ? {enforce: n.enforce} : {}), ...(DOERS[n.by] && n.by ? {by: n.by} : {}),
       x: +n.x || 0, y: +n.y || 0, w: +n.w || TYPES[n.type].w, h: +n.h || TYPES[n.type].h,
       name: String(n.name ?? ''), desc: String(n.desc ?? ''),
       tags: Array.isArray(n.tags) ? n.tags.map(String) : [],
@@ -915,7 +919,7 @@ function nodeHTML(n, fl, insideCount) {
   const flags = fl?.length ? `<div class="flags">${fl.map(r => `<span class="flag" style="--rc:var(--r-${r.color})">${esc(r.then || r.name)}</span>`).join('')}</div>` : '';
   return `<div class="node std t-${n.type}${s}${drop}" data-id="${n.id}" style="${style}"><div class="nin">
     <div class="nh"><i class="g g-${n.type}"></i><span class="nt">${T.label}</span><span class="nm">${meta}</span></div>
-    <div class="nn">${esc(n.name || 'Untitled')}</div>${modelLine(n)}${n.type === 'folder' && n.path ? `<div class="npath">${esc(n.path)}</div>` : ''}${n.desc ? `<div class="nd">${esc(n.desc)}</div>` : ''}${gateLines(n)}${tags}</div>${flags}${ports}<i class="rz"></i></div>`;
+    <div class="nn">${esc(n.name || 'Untitled')}</div>${modelLine(n)}${n.type === 'folder' && n.path ? `<div class="npath">${esc(n.path)}</div>` : ''}${n.desc ? `<div class="nd">${esc(n.desc)}</div>` : ''}${n.type === 'step' && n.by ? `<div class="nenf">Done by: ${esc(DOERS[n.by])}</div>` : ''}${gateLines(n)}${tags}</div>${flags}${ports}<i class="rz"></i></div>`;
 }
 
 function gateLines(n) {
@@ -1377,6 +1381,8 @@ function nodePanel(n) {
   if (n.type === 'folder')
     h += `<div class="f"><label for="iOs">Computer OS</label><select id="iOs" data-bind="os">${Object.entries(OSES).map(([k, l]) => opt(k, l, n.os || '')).join('')}</select></div>
       <div class="f"><label for="iPath">Path</label><input id="iPath" data-bind="path" value="${esc(n.path)}" placeholder="${esc(OS_PATH_HINT[n.os || ''])}" spellcheck="false" style="font-family:var(--mono)"></div>`;
+  if (n.type === 'step')
+    h += `<div class="f"><label for="iBy">Done by</label><select id="iBy" data-bind="by">${Object.entries(DOERS).map(([k, l]) => opt(k, l, n.by || '')).join('')}</select></div>`;
   if (n.type === 'gate')
     h += `<div class="f"><div class="sect">Checklist <small>all must pass</small></div>
       ${(n.checks || []).map((c, j) => `<div class="rrow"><span class="kw then">✓</span><input id="gc${j}" data-bind="checks.${j}" value="${esc(c)}" placeholder="e.g. tests pass"><button class="x" data-act="del" data-path="checks" data-i="${j}" aria-label="Remove check">×</button></div>`).join('')}

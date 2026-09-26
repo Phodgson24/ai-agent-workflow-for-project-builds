@@ -1471,13 +1471,24 @@
                     "any handoff check fails"
                   ],
                   "from": "hck",
-                  "fromSide": "b",
+                  "fromSide": "t",
                   "id": "d7",
                   "kind": "conditional",
                   "label": "a check fails → fix the doc",
-                  "note": "Only small edits to the doc and a commit, so they fit in a nearly full context. Then check again.",
+                  "note": "The worker fixes the doc (small edits and a commit, so they fit in a nearly full context), then checks again.",
                   "to": "hd",
-                  "toSide": "b"
+                  "toSide": "t"
+                },
+                {
+                  "conds": [],
+                  "from": "hd",
+                  "fromSide": "b",
+                  "id": "d8",
+                  "kind": "default",
+                  "label": "writes",
+                  "note": "The doc is a file in the repo; the step is the worker writing or fixing it.",
+                  "to": "hdoc",
+                  "toSide": "t"
                 }
               ],
               "nodes": [
@@ -1513,15 +1524,16 @@
                   "y": -220
                 },
                 {
+                  "by": "worker",
                   "comments": [],
-                  "desc": "handoffs/M01_H00-<name>.md. Sections: Done, Next, Open issues, Files touched, How to verify. Commit it tagged [M01_H00].",
+                  "desc": "Write the 5 sections, or fix what the Handoff check found. Commit it tagged [M01_H00].",
                   "h": 88,
                   "id": "hd",
-                  "name": "Write handoff doc",
+                  "name": "Write / fix handoff doc",
                   "path": "",
                   "rules": [],
                   "tags": [],
-                  "type": "memory",
+                  "type": "step",
                   "w": 216,
                   "x": 400,
                   "y": 220
@@ -1548,6 +1560,20 @@
                   "w": 240,
                   "x": 840,
                   "y": 160
+                },
+                {
+                  "comments": [],
+                  "desc": "handoffs/M01_H00-<name>.md. Sections: Done, Next, Open issues, Files touched, How to verify.",
+                  "h": 96,
+                  "id": "hdoc",
+                  "name": "Handoff doc",
+                  "path": "",
+                  "rules": [],
+                  "tags": [],
+                  "type": "memory",
+                  "w": 232,
+                  "x": 400,
+                  "y": 440
                 }
               ],
               "pins": {
