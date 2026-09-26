@@ -2,7 +2,10 @@
 
 **Agent Flow Sketchpad** is a one-page canvas for sketching AI-agent workflows (orchestrator → workers). This repo holds the app and the workflows designed with it, **in separate folders**.
 
+**Purpose:** design an agent workflow that is clear to a human, then hand it to Codex to review and turn into an `AGENTS.md`. See [`AGENTS.md`](AGENTS.md).
+
 ```
+├─ AGENTS.md                     ← read first: the purpose of this project
 ├─ app/                          ← the HTML app (code + docs)
 │   ├─ agent-flow-sketchpad.html    the whole app, one file
 │   └─ docs/

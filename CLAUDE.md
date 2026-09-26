@@ -1,6 +1,8 @@
 # Notes for Claude
 
-Read `app/docs/HANDOFF.md` first: it covers the user, the code map, setups, testing and comments. The points below **update or override** it.
+**Start with `AGENTS.md`**: it explains the purpose of Agent Flow Sketchpad (a clear visual workflow for a human, which Codex later turns into an `AGENTS.md`).
+
+Then read `app/docs/HANDOFF.md`: it covers the user, the code map, setups, testing and comments. The points below **update or override** it.
 
 ## Repo layout
 - `app/`: the HTML app and its docs. `workflows/`: setups exported from the app. Keep the two separate.
