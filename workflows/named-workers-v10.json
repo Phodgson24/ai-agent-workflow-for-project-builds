@@ -1445,13 +1445,39 @@
                 {
                   "conds": [],
                   "from": "hd",
-                  "fromSide": "",
+                  "fromSide": "r",
                   "id": "d5",
                   "kind": "default",
-                  "label": "send",
+                  "label": "check the doc",
+                  "note": "A handover is a partly done milestone, so it skips the Exit check: tests may fail mid-task, and \"how to verify\" is for finished work. Commit + checkpoint already happened in ① Safe point.",
+                  "to": "hck",
+                  "toSide": "l"
+                },
+                {
+                  "conds": [
+                    "all handoff checks pass"
+                  ],
+                  "from": "hck",
+                  "fromSide": "r",
+                  "id": "d6",
+                  "kind": "conditional",
+                  "label": "all pass → send",
                   "note": "",
                   "to": "pin:whand",
                   "toSide": ""
+                },
+                {
+                  "conds": [
+                    "any handoff check fails"
+                  ],
+                  "from": "hck",
+                  "fromSide": "b",
+                  "id": "d7",
+                  "kind": "conditional",
+                  "label": "a check fails → fix the doc",
+                  "note": "Only small edits to the doc and a commit, so they fit in a nearly full context. Then check again.",
+                  "to": "hd",
+                  "toSide": "b"
                 }
               ],
               "nodes": [
@@ -1488,7 +1514,7 @@
                 },
                 {
                   "comments": [],
-                  "desc": "handoffs/M01_H00-<name>.md. Sections: Done, Next, Open issues, Files touched, How to verify.",
+                  "desc": "handoffs/M01_H00-<name>.md. Sections: Done, Next, Open issues, Files touched, How to verify. Commit it tagged [M01_H00].",
                   "h": 88,
                   "id": "hd",
                   "name": "Write handoff doc",
@@ -1499,15 +1525,38 @@
                   "w": 216,
                   "x": 400,
                   "y": 220
+                },
+                {
+                  "checks": [
+                    "all 5 sections filled in",
+                    "failing tests listed under Open issues, with the reason",
+                    "handoff doc committed [M01_H00]",
+                    "nothing left uncommitted (git status clean)"
+                  ],
+                  "comments": [],
+                  "desc": "The worker checks the handoff doc before sending it.",
+                  "enforce": "self",
+                  "h": 200,
+                  "id": "hck",
+                  "name": "Handoff check",
+                  "path": "",
+                  "rules": [],
+                  "tags": [
+                    "by: worker"
+                  ],
+                  "type": "gate",
+                  "w": 240,
+                  "x": 840,
+                  "y": 160
                 }
               ],
               "pins": {
                 "wcont": {
-                  "x": 780,
+                  "x": 1240,
                   "y": -206
                 },
                 "whand": {
-                  "x": 780,
+                  "x": 1240,
                   "y": 236
                 },
                 "wsp2": {
@@ -1536,7 +1585,14 @@
             "name": "Fresh worker · M01_H01 or M02_H00",
             "path": "",
             "provider": "codex",
-            "rules": [],
+            "rules": [
+              {
+                "if": [
+                  "the handoff doc is missing a section or doesn't match the code"
+                ],
+                "then": "tell the orchestrator before starting work"
+              }
+            ],
             "tags": [],
             "type": "agent",
             "w": 240,
@@ -1612,7 +1668,7 @@
       "y": 176
     }
   ],
-  "notes": "v9-claude: Claude's recommended version of v8.\nBoth threads use the same loop: Agent → Context check → ① Safe point → ② Compact or hand over → back.\nColours mean the same thing everywhere: blue task · green result · violet start fresh worker · orange getting full · cyan safe point reached · red compacted → continue · pink hand over / takes over · yellow handover check.\nBoxes stay short; detail is in each box's Details panel (rules, descriptions, link notes).\nprogress.md is the single source of truth (OWNER line, checkpoints, log). Noisy work (tests, logs, big reviews) goes to subagents.\nExit check (a Quality gate, self-checked for now): a worker sends a result only after its exit check passes (tests, tagged commit, checkpoint, how-to-verify). Catching mistakes there is cheaper than review round trips, which fill the orchestrator's context. Fix rounds per task: max 2, then tell the user. To really enforce it, add a Codex Stop hook and set the gate's \"Enforced by\" to Hook.\nNames: 00 - Orchestrator O## · workers M##_H## - milestone name.",
+  "notes": "v9-claude: Claude's recommended version of v8.\nBoth threads use the same loop: Agent → Context check → ① Safe point → ② Compact or hand over → back.\nColours mean the same thing everywhere: blue task · green result · violet start fresh worker · orange getting full · cyan safe point reached · red compacted → continue · pink hand over / takes over · yellow handover check.\nBoxes stay short; detail is in each box's Details panel (rules, descriptions, link notes).\nprogress.md is the single source of truth (OWNER line, checkpoints, log). Noisy work (tests, logs, big reviews) goes to subagents.\nExit check (a Quality gate, self-checked for now): a worker sends a result only after its exit check passes (tests, tagged commit, checkpoint, how-to-verify). Catching mistakes there is cheaper than review round trips, which fill the orchestrator's context. Fix rounds per task: max 2, then tell the user. To really enforce it, add a Codex Stop hook and set the gate's \"Enforced by\" to Hook.\nHandoff check (a Quality gate, self-checked): before a worker sends a handoff doc, all 5 sections are filled in, failing tests are listed under Open issues, the doc is committed [M01_H00] and git status is clean. A handover skips the Exit check (partly done work).\nNames: 00 - Orchestrator O## · workers M##_H## - milestone name.",
   "rules": [],
   "spread": {
     "x": 0,
