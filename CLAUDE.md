@@ -6,7 +6,7 @@ Then read `app/docs/HANDOFF.md`: it covers the user, the code map, setups, testi
 
 ## Repo layout
 - `app/`: the HTML app and its docs. `workflows/`: setups exported from the app. Keep the two separate.
-- The repo file `app/agent-flow-sketchpad.html` is the source of truth. It matches the live artifact as last published from this repo (version 31, move links between boxes).
+- The repo file `app/agent-flow-sketchpad.html` is the source of truth. It matches the live artifact as last published from this repo (version 32, grab a line near its end).
 
 ## Publishing
 - Edit `app/agent-flow-sketchpad.html`, test it, commit it, then publish with `Artifact` using `url: https://claude.ai/artifact/FAht8ymX9NECxeoieiT26w` and `file_path` set to that file. Omit `capabilities` and `icon`.
@@ -31,7 +31,7 @@ Then read `app/docs/HANDOFF.md`: it covers the user, the code map, setups, testi
 - **Computer OS (folder boxes):** a "Computer OS" dropdown in Details (`OSES`: Not set, Windows, WSL (Ubuntu on Windows), Linux, macOS), stored as `os` on the folder node and kept by `normNodes`; the Path placeholder follows it (`OS_PATH_HINT`).
 - **Quality gate cell** (`gate` type, violet, shield icon): a checkpoint work must pass before it moves on. Unlike a Decision (a choice), it holds a fixed `checks` list (all must pass) and `enforce` (`ENFORCERS`: self, hook, script, orchestrator, human), which says whether anything outside the agent makes sure. The box shows the checklist and "Enforced by"; Details has a Checklist editor and an Enforced by dropdown. Code: `gateLines()`, `.std.t-gate`, `.nchecks`, `.nenf`, `.g-gate`.
 - **Step cell** (`step` type, blue, pill icon): an action someone does, with `by` (`DOERS`: worker, orchestrator, subagent, user) shown as "Done by" on the box and a dropdown in Details. Added because Memory/Folder/Tool are things, so a loop like "fix the doc" needs an action to point at. Other action boxes typed as Tool/Note in v10 (Compact, Commit + checkpoint, Finish the current step) were left as they are; converting them was offered, not done.
-- **Move a link to another box:** select the link, then either pick new ends in Details → Connects (From / To dropdowns, `endOpts()`; the moved end's side resets to Auto) or drag its end dots onto another box. End dots are `EH_R` (8) screen px at any zoom (resized in `applyView()`), and `#handles{z-index:5}` puts them above the boxes' side dots, which used to sit on top and start a new link instead.
+- **Move a link to another box:** select the link, then either pick new ends in Details → Connects (From / To dropdowns, `endOpts()`; the moved end's side resets to Auto) or drag its end dots onto another box. End dots are `EH_R` (8) screen px at any zoom (resized in `applyView()`), and `#handles{z-index:5}` puts them above the boxes' side dots, which used to sit on top and start a new link instead. You can also press the line itself in its outer 40% at either end (`nearEnd()`, `lastEnds`) and drag: a `grabEnd` drag turns into `reattach` after 5 px (a plain click just selects). A box's side dot sits on the box edge over the line's end, so `lineEndAt()` sends a press just outside the box (on the line) to the line and a press on the box side of the edge to the dot (new link). `.hit` lines are at least 14 screen px wide at any zoom.
 - Fixed: after double-clicking into a sub-flow, the canvas stayed faded (the hover focus pointed at a box on the level above). `applyFocus()` now ignores targets that aren't on the current level.
 
 ## Testing in the cloud

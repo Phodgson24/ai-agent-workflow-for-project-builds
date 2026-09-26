@@ -98,7 +98,8 @@ header{grid-column:1/-1;display:flex;align-items:center;gap:8px;flex-wrap:wrap;p
 #handles{z-index:5}   /* a selected link's end dots sit above boxes and their side dots, so they can be grabbed */
 .eh{fill:var(--surface);stroke:var(--accent);stroke-width:2.5;pointer-events:all;cursor:move}
 .eh:hover{fill:var(--accent)}
-.hit{fill:none;stroke:transparent;stroke-width:16;pointer-events:stroke;cursor:pointer}
+.hit{fill:none;stroke:transparent;stroke-width:max(16px, calc(14px / var(--z, 1)));pointer-events:stroke;cursor:pointer}   /* at least 14 screen px to click, at any zoom */
+#vp.endgrab .hit,#vp.endgrab .port{cursor:grab}
 .halo{fill:none;stroke:var(--bg);stroke-width:7;pointer-events:none}
 .e{fill:none;stroke:var(--edge);stroke-width:1.75}
 .e.conditional{stroke:var(--t-decision)}
@@ -426,7 +427,7 @@ path.e.csel,path.e.chl{stroke:var(--t-decision);stroke-width:3}
       <svg id="handles"><g id="hg" transform="translate(5000 5000)"></g></svg>
     </div>
     <div class="empty" id="empty" hidden><div>Blank canvas.<br>Drag a component in from the left to start.</div></div>
-    <div class="hud hints" id="hints"><ul><li>Drag empty space to pan · scroll to zoom</li><li>Drag a side dot ● onto another box to link</li><li>Select a link, then drag its end dots to move them</li><li>Double-click empty space to add an agent</li><li>Drag a group by its title bar</li><li>Double-click a sub-flow to open it</li></ul><button class="btn" id="hintsBtn" aria-expanded="false">? Tips</button></div>
+    <div class="hud hints" id="hints"><ul><li>Drag empty space to pan · scroll to zoom</li><li>Drag a side dot ● onto another box to link</li><li>Grab a line near one end and drag it onto another box to move that end</li><li>Double-click empty space to add an agent</li><li>Drag a group by its title bar</li><li>Double-click a sub-flow to open it</li></ul><button class="btn" id="hintsBtn" aria-expanded="false">? Tips</button></div>
     <div class="hud nav" id="nav" hidden></div>
     <div class="hud cbar" id="cbar" role="status" hidden>
       <span id="cbarText"></span>
@@ -1149,10 +1150,20 @@ function geom(p, q, bend = 0) {
     pts: [p.x, p.y, c1x, c1y, c2x, c2y, bx, by].map(v => Math.round(v * 10) / 10).join(','),
   };
 }
+// Link end points as last drawn, so a press on a line can tell which end it is nearer to.
+let lastEnds = {};
+// The end of link `eid` that point w is near: 'from' or 'to' when it is in the outer 40% of the line at that end,
+// or null in the middle (a press there just selects the link).
+function nearEnd(eid, w) {
+  const p = lastEnds[eid + ':from'], q = lastEnds[eid + ':to']; if (!p || !q) return null;
+  const dp = Math.hypot(w.x - p.x, w.y - p.y), dq = Math.hypot(w.x - q.x, w.y - q.y), len = Math.hypot(p.x - q.x, p.y - q.y);
+  return Math.min(dp, dq) <= len * .4 ? (dp < dq ? 'from' : 'to') : null;
+}
 function renderEdges() {
   const byId = Object.fromEntries(viewNodes().map(n => [n.id, n]));
   const routes = computeRoutes(byId);
   const ends = layoutEnds(byId, routes);
+  lastEnds = ends;
   let svg = '', labels = '', handles = '', arrows = '', selSvg = '', stubs = '', socks = '';
   // Match badges: a link end that meets a sub-flow box (level above) or an entry/exit point (inside) gets a
   // lit strip on the box edge there, and that stretch of the line takes the badge colour.
@@ -1699,6 +1710,17 @@ function linkAnchorId() {
 }
 function focusCanvas() { try { window.focus(); } catch {} vp.focus({preventScroll:true}); }
 
+// The line under the pointer whose end a press here would pick up, or null. A box's side dot sits on the box
+// edge, right where a line ends, so it covers the line's end. Pressing on the box side of the edge still
+// starts a new link; pressing just outside the box, on the line, picks up that line's end instead.
+function lineEndAt(e, w) {
+  const t = e.target;
+  if (t.classList?.contains('hit')) return nearEnd(t.dataset.eid, w) ? t : null;
+  if (!t.dataset?.port) return null;
+  const b = t.closest('.node')?.getBoundingClientRect(), x = e.clientX, y = e.clientY;
+  if (!b || (x >= b.left - 1 && x <= b.right + 1 && y >= b.top - 1 && y <= b.bottom + 1)) return null;
+  return document.elementsFromPoint(e.clientX, e.clientY).find(el => el.classList?.contains('hit') && nearEnd(el.dataset.eid, w)) || null;
+}
 vp.addEventListener('pointerdown', e => {
   if (e.target.closest('.hud')) return;
   if (commentMode && cctl) return commentPointerDown(e);
@@ -1706,7 +1728,10 @@ vp.addEventListener('pointerdown', e => {
   // preventDefault() below also blocks the browser's own click-to-focus, so take focus explicitly;
   // otherwise Delete / Ctrl+Z go to the host page instead of this canvas.
   focusCanvas();
-  const t = e.target, nodeEl = t.closest('.node'), eid = t.closest('[data-eid]')?.dataset.eid, w = toWorld(e.clientX, e.clientY);
+  let t = e.target, nodeEl = t.closest('.node'), eid = t.closest('[data-eid]')?.dataset.eid;
+  const w = toWorld(e.clientX, e.clientY);
+  const line = t.dataset.port ? lineEndAt(e, w) : null;
+  if (line) { t = line; nodeEl = null; eid = line.dataset.eid; }
   const dbl = Date.now() - lastDown.t < 320 && Math.hypot(e.clientX - lastDown.x, e.clientY - lastDown.y) < 8;
   lastDown = {t:Date.now(), x:e.clientX, y:e.clientY};
 
@@ -1726,6 +1751,10 @@ vp.addEventListener('pointerdown', e => {
     if (dbl) { document.body.classList.add('insp-open'); setTimeout(() => $('#iName')?.select(), 30); }
     const kids = !isFrame(n) ? [] : descendants(n).map(k => ({k, x:k.x, y:k.y}));
     drag = {mode:'move', id:n.id, sx:w.x, sy:w.y, x0:n.x, y0:n.y, kids, moved:false, into:null};
+  } else if (eid && !dbl && t.classList.contains('hit') && nearEnd(eid, w)) {
+    // Pressed a line near one end: select it, and if the pointer then moves, carry that end to another box.
+    select('edge', eid);
+    drag = {mode:'grabEnd', eid, end:nearEnd(eid, w), sx:e.clientX, sy:e.clientY, cur:w, over:null, overPort:null};
   } else if (eid) {
     select('edge', eid); if (dbl) document.body.classList.add('insp-open');
     renderCanvas(); return;
@@ -1740,7 +1769,14 @@ vp.addEventListener('pointerdown', e => {
   e.preventDefault();
 });
 vp.addEventListener('pointermove', e => {
-  if (!drag) return;
+  if (!drag) {   // show a grab cursor where pressing a line would pick up its end
+    vp.classList.toggle('endgrab', !!lineEndAt(e, toWorld(e.clientX, e.clientY)));
+    return;
+  }
+  if (drag.mode === 'grabEnd') {
+    if (Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) < 5) return;   // a click, not a drag (yet)
+    drag.mode = 'reattach'; document.body.classList.add('connecting');
+  }
   if (drag.mode === 'pan') { view.x = drag.vx + e.clientX - drag.sx; view.y = drag.vy + e.clientY - drag.sy; applyView(); return; }
   const w = toWorld(e.clientX, e.clientY);
   if (drag.mode === 'connect' || drag.mode === 'reattach') {
