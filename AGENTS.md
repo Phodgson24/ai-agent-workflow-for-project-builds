@@ -17,6 +17,21 @@ a person can read            or the app's JSON button
 - **The workflow is the real product.** A finished workflow is the spec an AI agent turns into an `AGENTS.md` (the instruction file Codex reads) for the project it describes.
 - **Clarity for humans comes first.** When designing, favour what a person can read at a glance. Put detail in the places the app keeps it (rules, descriptions, link notes). They are all in the exported JSON, so nothing is lost for the agent.
 
+## Keep workflows minimal (but complete)
+
+**Goal:** every workflow is easy to follow at a glance and still includes every rule and detail an agent needs. Visual clutter makes a workflow hard to follow and causes mistakes, especially for someone with ADHD. Leaving out a needed rule is just as bad.
+
+**How: split big workflows into sub-flows.** A sub-flow is a box that opens into its own canvas. Each canvas shows one chunk of the workflow, so a person can focus on one piece at a time. The full detail lives inside, one level down.
+
+**Nesting limit:**
+- Aim for 3 levels or fewer.
+- Never go past 4 levels.
+- Count the top-level workflow as level 1.
+
+**Rules of thumb:**
+- If a canvas starts to feel crowded, move a group of related boxes into a sub-flow instead of squeezing them in.
+- Never delete a rule to save space. Move it to a box's description, rules or link notes, which stay in the exported JSON.
+
 ## If you are an AI agent working in this repo
 
 - **Building or changing the app** (`app/`): keep it serving that purpose, a clear visual workflow for a human. Read `CLAUDE.md` and `app/docs/HANDOFF.md` for how it is built.
