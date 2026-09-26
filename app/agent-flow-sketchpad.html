@@ -552,6 +552,9 @@ function fixAgent(n) {
 }
 const RULE_TYPES = BUILD;
 const SIDES = {'':'Auto', t:'Top', r:'Right', b:'Bottom', l:'Left'};
+// Operating system a project folder lives on (folder boxes only). The path hint follows the choice.
+const OSES = {'':'Not set', windows:'Windows', wsl:'WSL (Ubuntu on Windows)', linux:'Linux', macos:'macOS'};
+const OS_PATH_HINT = {'':'e.g. ~/code/my-project', windows:'e.g. C:\\Users\\you\\code\\my-project', wsl:'e.g. ~/code/my-project', linux:'e.g. ~/code/my-project', macos:'e.g. ~/code/my-project'};
 const KINDS = {default:'Always', conditional:'Conditional', fallback:'Fallback / on error', async:'Async / background'};
 const COLORS = ['rose','amber','indigo','teal'];
 // Match badges: a colour on a link that crosses into or out of a sub-flow. It shows as a dot where the link meets
@@ -630,7 +633,7 @@ function normNodes(list) {
   return (Array.isArray(list) ? list : []).map(n => n && n.type === 'llm' ? {...n, type:'agent'} : n).filter(n => n && TYPES[n.type]).map(n => {
     const o = fixAgent({
       id: String(n.id ?? uid()), type: n.type,
-      provider: n.provider, model: n.model, effort: n.effort, path: String(n.path ?? ''),
+      provider: n.provider, model: n.model, effort: n.effort, path: String(n.path ?? ''), ...(OSES[n.os] && n.os ? {os: n.os} : {}),
       x: +n.x || 0, y: +n.y || 0, w: +n.w || TYPES[n.type].w, h: +n.h || TYPES[n.type].h,
       name: String(n.name ?? ''), desc: String(n.desc ?? ''),
       tags: Array.isArray(n.tags) ? n.tags.map(String) : [],
@@ -1355,7 +1358,8 @@ function nodePanel(n) {
     </div><div class="readout">${esc(n.model)}</div></div>`;
   }
   if (n.type === 'folder')
-    h += `<div class="f"><label for="iPath">Path</label><input id="iPath" data-bind="path" value="${esc(n.path)}" placeholder="e.g. ~/code/my-project" spellcheck="false" style="font-family:var(--mono)"></div>`;
+    h += `<div class="f"><label for="iOs">Computer OS</label><select id="iOs" data-bind="os">${Object.entries(OSES).map(([k, l]) => opt(k, l, n.os || '')).join('')}</select></div>
+      <div class="f"><label for="iPath">Path</label><input id="iPath" data-bind="path" value="${esc(n.path)}" placeholder="${esc(OS_PATH_HINT[n.os || ''])}" spellcheck="false" style="font-family:var(--mono)"></div>`;
   h += `<div class="f"><label for="iDesc">${n.type === 'note' ? 'Note text' : n.type === 'agent' ? 'Instructions / prompt' : n.type === 'group' ? 'Purpose' : 'Description'}</label><textarea id="iDesc" data-bind="desc" rows="3">${esc(n.desc)}</textarea></div>`;
   if (!annotate) {
     h += `<div class="f"><div class="sect">Tags <small>Enter to add</small></div>
