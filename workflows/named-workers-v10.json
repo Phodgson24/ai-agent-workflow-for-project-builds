@@ -1149,42 +1149,42 @@
             "toSide": ""
           },
           {
-            "id": "wpass",
-            "from": "wexit",
-            "to": "pin:result",
-            "kind": "conditional",
-            "label": "all pass → send result",
             "conds": [
               "tests pass AND commit tagged AND checkpoint written AND how-to-verify done"
             ],
-            "note": "Add \"compacted: replace me\" if the summary carries a COMPACTED marker. A mistake caught here costs one extra step in the worker's own chat. Caught by the orchestrator, it costs a review → fix instructions → re-review round trip, and every round trip fills the orchestrator's context, so its own handover comes sooner.",
+            "from": "wexit",
             "fromSide": "",
+            "id": "wpass",
+            "kind": "conditional",
+            "label": "all pass → send result",
+            "note": "Add \"compacted: replace me\" if the summary carries a COMPACTED marker. A mistake caught here costs one extra step in the worker's own chat. Caught by the orchestrator, it costs a review → fix instructions → re-review round trip, and every round trip fills the orchestrator's context, so its own handover comes sooner.",
+            "to": "pin:result",
             "toSide": ""
           },
           {
-            "id": "wfix",
-            "from": "wexit",
-            "to": "cw",
-            "kind": "conditional",
-            "label": "a check fails → fix first",
             "conds": [
               "any exit check fails"
             ],
-            "note": "Fix in the worker's own chat, then run the exit check again. A mistake caught here costs one extra step in the worker's own chat. Caught by the orchestrator, it costs a review → fix instructions → re-review round trip, and every round trip fills the orchestrator's context, so its own handover comes sooner.",
+            "from": "wexit",
             "fromSide": "",
+            "id": "wfix",
+            "kind": "conditional",
+            "label": "a check fails → fix first",
+            "note": "Fix in the worker's own chat, then run the exit check again. A mistake caught here costs one extra step in the worker's own chat. Caught by the orchestrator, it costs a review → fix instructions → re-review round trip, and every round trip fills the orchestrator's context, so its own handover comes sooner.",
+            "to": "cw",
             "toSide": ""
           },
           {
-            "id": "wblock",
-            "from": "wexit",
-            "to": "pin:result",
-            "kind": "fallback",
-            "label": "stuck → send as blocked",
             "conds": [
               "same check fails twice with no progress"
             ],
-            "note": "Stop trying: send the result marked BLOCKED with the failing check and what was tried, so the orchestrator decides (per OpenAI's repair-loop guidance: stop on max attempts or no progress).",
+            "from": "wexit",
             "fromSide": "",
+            "id": "wblock",
+            "kind": "fallback",
+            "label": "stuck → send as blocked",
+            "note": "Stop trying: send the result marked BLOCKED with the failing check and what was tried, so the orchestrator decides (per OpenAI's repair-loop guidance: stop on max attempts or no progress).",
+            "to": "pin:result",
             "toSide": ""
           }
         ],
@@ -1544,21 +1544,28 @@
             "y": 420
           },
           {
-            "id": "wexit",
-            "type": "decision",
-            "x": -470,
-            "y": -230,
-            "w": 216,
+            "checks": [
+              "tests pass",
+              "commit tagged [M01_H00]",
+              "checkpoint line in progress.md",
+              "the goal's \"how to verify\" done"
+            ],
+            "comments": [],
+            "desc": "The worker checks its own work before sending a result.",
+            "enforce": "self",
             "h": 96,
+            "id": "wexit",
             "name": "Exit check",
-            "desc": "Before sending: tests pass · commit tagged [M01_H00] · checkpoint line in progress.md · the goal's \"how to verify\" done.",
             "path": "",
+            "rules": [],
             "tags": [
               "by: worker",
-              "optional: Codex Stop hook"
+              "upgrade: Codex Stop hook"
             ],
-            "rules": [],
-            "comments": []
+            "type": "gate",
+            "w": 216,
+            "x": -470,
+            "y": -230
           }
         ],
         "pins": {
@@ -1605,7 +1612,7 @@
       "y": 176
     }
   ],
-  "notes": "v9-claude: Claude's recommended version of v8.\nBoth threads use the same loop: Agent → Context check → ① Safe point → ② Compact or hand over → back.\nColours mean the same thing everywhere: blue task · green result · violet start fresh worker · orange getting full · cyan safe point reached · red compacted → continue · pink hand over / takes over · yellow handover check.\nBoxes stay short; detail is in each box's Details panel (rules, descriptions, link notes).\nprogress.md is the single source of truth (OWNER line, checkpoints, log). Noisy work (tests, logs, big reviews) goes to subagents.\nExit check: a worker sends a result only after its exit check passes (tests, tagged commit, checkpoint, how-to-verify). Catching mistakes there is cheaper than review round trips, which fill the orchestrator's context. Fix rounds per task: max 2, then tell the user. A Codex Stop hook can enforce the exit check (optional).\nNames: 00 - Orchestrator O## · workers M##_H## - milestone name.",
+  "notes": "v9-claude: Claude's recommended version of v8.\nBoth threads use the same loop: Agent → Context check → ① Safe point → ② Compact or hand over → back.\nColours mean the same thing everywhere: blue task · green result · violet start fresh worker · orange getting full · cyan safe point reached · red compacted → continue · pink hand over / takes over · yellow handover check.\nBoxes stay short; detail is in each box's Details panel (rules, descriptions, link notes).\nprogress.md is the single source of truth (OWNER line, checkpoints, log). Noisy work (tests, logs, big reviews) goes to subagents.\nExit check (a Quality gate, self-checked for now): a worker sends a result only after its exit check passes (tests, tagged commit, checkpoint, how-to-verify). Catching mistakes there is cheaper than review round trips, which fill the orchestrator's context. Fix rounds per task: max 2, then tell the user. To really enforce it, add a Codex Stop hook and set the gate's \"Enforced by\" to Hook.\nNames: 00 - Orchestrator O## · workers M##_H## - milestone name.",
   "rules": [],
   "spread": {
     "x": 0,

@@ -9,7 +9,7 @@
   --bg:#ECEEE9; --surface:#FFFFFF; --panel:#F6F7F3; --ink:#1A1E1B; --muted:#646B65; --line:#D3D8D0; --dot:#BCC2B9;
   --accent:#3346C9; --accent-ink:#FFFFFF; --edge:#5A625C; --flag-ink:#FFFFFF;
   --t-agent:#4453D1; --t-folder:#8A6A2E; --t-tool:#0B857A; --t-decision:#B26C06; --t-memory:#3A8233;
-  --t-human:#C23F66; --t-input:#56697A; --t-output:#2E3A44; --t-note:#C9A21B; --t-group:#7B858E;
+  --t-human:#C23F66; --t-gate:#6B4FC0; --t-input:#56697A; --t-output:#2E3A44; --t-note:#C9A21B; --t-group:#7B858E;
   --r-rose:#C23F66; --r-amber:#B26C06; --r-indigo:#4453D1; --r-teal:#0B857A;
   --shadow:0 1px 2px rgba(20,30,20,.08),0 6px 18px rgba(20,30,20,.06);
   --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
@@ -21,7 +21,7 @@
     --bg:#131614; --surface:#1D211E; --panel:#181B19; --ink:#E4E8E2; --muted:#98A098; --line:#2F3530; --dot:#323933;
     --accent:#8E9BFF; --accent-ink:#10131A; --edge:#9AA39B; --flag-ink:#111412;
     --t-agent:#8390FF; --t-folder:#D6B270; --t-tool:#3CC5B6; --t-decision:#E7A33A; --t-memory:#7BC56E;
-    --t-human:#F07C9C; --t-input:#93A8BA; --t-output:#C4CFD8; --t-note:#E3C24A; --t-group:#8E98A1;
+    --t-human:#F07C9C; --t-gate:#B39BFF; --t-input:#93A8BA; --t-output:#C4CFD8; --t-note:#E3C24A; --t-group:#8E98A1;
     --r-rose:#F07C9C; --r-amber:#E7A33A; --r-indigo:#8390FF; --r-teal:#3CC5B6;
     --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.25);
   }
@@ -31,7 +31,7 @@
   --bg:#131614; --surface:#1D211E; --panel:#181B19; --ink:#E4E8E2; --muted:#98A098; --line:#2F3530; --dot:#323933;
   --accent:#8E9BFF; --accent-ink:#10131A; --edge:#9AA39B; --flag-ink:#111412;
   --t-agent:#8390FF; --t-folder:#D6B270; --t-tool:#3CC5B6; --t-decision:#E7A33A; --t-memory:#7BC56E;
-  --t-human:#F07C9C; --t-input:#93A8BA; --t-output:#C4CFD8; --t-note:#E3C24A; --t-group:#8E98A1;
+  --t-human:#F07C9C; --t-gate:#B39BFF; --t-input:#93A8BA; --t-output:#C4CFD8; --t-note:#E3C24A; --t-group:#8E98A1;
   --r-rose:#F07C9C; --r-amber:#E7A33A; --r-indigo:#8390FF; --r-teal:#3CC5B6;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.25);
 }
@@ -79,6 +79,7 @@ header{grid-column:1/-1;display:flex;align-items:center;gap:8px;flex-wrap:wrap;p
 .g-folder{height:10px;border-radius:1px 2px 2px 2px;clip-path:polygon(0 0,42% 0,52% 22%,100% 22%,100% 100%,0 100%)}
 .g-tool{clip-path:polygon(50% 0,100% 100%,0 100%)}
 .g-decision{transform:rotate(45deg) scale(.82);border-radius:1px}
+.g-gate{clip-path:polygon(0 0,100% 0,100% 55%,50% 100%,0 55%)}
 .g-memory{height:9px;border-radius:5px/3px;box-shadow:0 3px 0 -1px var(--tc)}
 .g-human{border-radius:50%}
 .g-input{clip-path:polygon(0 0,100% 50%,0 100%)}
@@ -120,6 +121,12 @@ header{grid-column:1/-1;display:flex;align-items:center;gap:8px;flex-wrap:wrap;p
 .std{background:color-mix(in oklab,var(--tc) 6%,var(--surface));border:1px solid color-mix(in oklab,var(--tc) 40%,var(--line));border-radius:10px;box-shadow:var(--shadow);cursor:grab}
 .std.t-human{border-radius:22px}
 .std.t-decision{border-width:1.5px;border-style:dashed}
+.std.t-gate{border-width:1.5px;border-left:5px solid var(--tc)}
+.nchecks{list-style:none;margin:0;padding:4px 10px 0;font-size:12px;line-height:1.4;color:var(--ink)}
+.nchecks li{display:flex;gap:6px;overflow-wrap:anywhere}
+.nchecks li::before{content:'☐';color:var(--tc);flex:none}
+.nenf{font:500 11px var(--mono);color:var(--tc);padding:4px 10px 0}
+.nenf.self{color:var(--muted)}
 .nin{position:absolute;inset:0;overflow:hidden;border-radius:inherit;display:flex;flex-direction:column}
 .nin > *{flex-shrink:0}   /* lines never squash, so auto-size can see when text needs more room */
 .nh{display:flex;align-items:center;gap:7px;padding:6px 10px;background:color-mix(in oklab,var(--tc) 14%,var(--surface));border-bottom:1px solid color-mix(in oklab,var(--tc) 22%,var(--line))}
@@ -514,6 +521,7 @@ const TYPES = {
   agent:    {label:'Agent',    name:'New agent',    hint:'Agent + model',         w:208, h:120},
   tool:     {label:'Tool',     name:'New tool',     hint:'API, function, MCP',    w:184, h:88},
   decision: {label:'Decision', name:'Decision',     hint:'Router, if / else',     w:184, h:88},
+  gate:     {label:'Quality gate', name:'Quality gate', hint:'Must pass every check', w:208, h:120},
   memory:   {label:'Memory',   name:'Memory',       hint:'Store, vector DB',      w:184, h:88},
   folder:   {label:'Folder',   name:'Project folder', hint:'Project or directory', w:200, h:88},
   human:    {label:'Human',    name:'Human review', hint:'Approval checkpoint',   w:184, h:88},
@@ -521,7 +529,7 @@ const TYPES = {
   note:     {label:'Note',     name:'Note',         hint:'Sticky comment',        w:200, h:120},
   group:    {label:'Group',    name:'Group',        hint:'Frame a sub-team',      w:420, h:260},
 };
-const BUILD = ['input','agent','tool','decision','memory','folder','human','output'];
+const BUILD = ['input','agent','tool','decision','gate','memory','folder','human','output'];
 // Provider → models → effort levels. Edit this list to add or retire models.
 const EFFORT_LABELS = {low:'Low', medium:'Medium', high:'High', xhigh:'Extra high', max:'Max', default:'Default (not adjustable)'};
 const PROVIDERS = {
@@ -555,6 +563,8 @@ const SIDES = {'':'Auto', t:'Top', r:'Right', b:'Bottom', l:'Left'};
 // Operating system a project folder lives on (folder boxes only). The path hint follows the choice.
 const OSES = {'':'Not set', windows:'Windows', wsl:'WSL (Ubuntu on Windows)', linux:'Linux', macos:'macOS'};
 const OS_PATH_HINT = {'':'e.g. ~/code/my-project', windows:'e.g. C:\\Users\\you\\code\\my-project', wsl:'e.g. ~/code/my-project', linux:'e.g. ~/code/my-project', macos:'e.g. ~/code/my-project'};
+// Quality gate: who makes sure the checks really pass. "self" = the agent checks its own work (nothing outside enforces it).
+const ENFORCERS = {'':'Not set', self:'Self-check (not enforced)', hook:'Hook (e.g. Codex Stop hook)', script:'Script / CI', orchestrator:'Orchestrator review', human:'Human'};
 const KINDS = {default:'Always', conditional:'Conditional', fallback:'Fallback / on error', async:'Async / background'};
 const COLORS = ['rose','amber','indigo','teal'];
 // Match badges: a colour on a link that crosses into or out of a sub-flow. It shows as a dot where the link meets
@@ -634,12 +644,14 @@ function normNodes(list) {
     const o = fixAgent({
       id: String(n.id ?? uid()), type: n.type,
       provider: n.provider, model: n.model, effort: n.effort, path: String(n.path ?? ''), ...(OSES[n.os] && n.os ? {os: n.os} : {}),
+      ...(Array.isArray(n.checks) ? {checks: n.checks.map(String)} : {}), ...(ENFORCERS[n.enforce] && n.enforce ? {enforce: n.enforce} : {}),
       x: +n.x || 0, y: +n.y || 0, w: +n.w || TYPES[n.type].w, h: +n.h || TYPES[n.type].h,
       name: String(n.name ?? ''), desc: String(n.desc ?? ''),
       tags: Array.isArray(n.tags) ? n.tags.map(String) : [],
       rules: Array.isArray(n.rules) ? n.rules.map(r => ({if: Array.isArray(r.if) && r.if.length ? r.if.map(String) : [''], then: String(r.then ?? '')})) : [],
       comments: Array.isArray(n.comments) ? n.comments.map(c => ({t: +c.t || Date.now(), text: String(c.text ?? '')})) : [],
     });
+    if (o.type === 'gate' && !o.checks) o.checks = [];
     if (n.type === 'group' && n.sub && typeof n.sub === 'object') o.sub = normSub(n.sub);
     return o;
   });
@@ -903,9 +915,14 @@ function nodeHTML(n, fl, insideCount) {
   const flags = fl?.length ? `<div class="flags">${fl.map(r => `<span class="flag" style="--rc:var(--r-${r.color})">${esc(r.then || r.name)}</span>`).join('')}</div>` : '';
   return `<div class="node std t-${n.type}${s}${drop}" data-id="${n.id}" style="${style}"><div class="nin">
     <div class="nh"><i class="g g-${n.type}"></i><span class="nt">${T.label}</span><span class="nm">${meta}</span></div>
-    <div class="nn">${esc(n.name || 'Untitled')}</div>${modelLine(n)}${n.type === 'folder' && n.path ? `<div class="npath">${esc(n.path)}</div>` : ''}${n.desc ? `<div class="nd">${esc(n.desc)}</div>` : ''}${tags}</div>${flags}${ports}<i class="rz"></i></div>`;
+    <div class="nn">${esc(n.name || 'Untitled')}</div>${modelLine(n)}${n.type === 'folder' && n.path ? `<div class="npath">${esc(n.path)}</div>` : ''}${n.desc ? `<div class="nd">${esc(n.desc)}</div>` : ''}${gateLines(n)}${tags}</div>${flags}${ports}<i class="rz"></i></div>`;
 }
 
+function gateLines(n) {
+  if (n.type !== 'gate') return '';
+  const cs = (n.checks || []).filter(c => c.trim());
+  return `${cs.length ? `<ul class="nchecks">${cs.map(c => `<li>${esc(c)}</li>`).join('')}</ul>` : ''}${n.enforce ? `<div class="nenf${n.enforce === 'self' ? ' self' : ''}">Enforced by: ${esc(ENFORCERS[n.enforce])}</div>` : ''}`;
+}
 function modelLine(n) {
   if (n.type !== 'agent') return '';
   const m = findModel(n), eff = n.effort === 'default' ? '' : ` <span>·</span> ${EFFORT_LABELS[n.effort].toLowerCase()}`;
@@ -1335,7 +1352,7 @@ function nodePanel(n) {
         <button class="btn danger" data-act="delete">Delete sub-flow</button></div>`;
   } else {
     h += `<div class="row">
-      ${annotate ? '' : `<select id="iType" data-bind="type" aria-label="Component type" style="flex:1">${Object.keys(TYPES).filter(k => !['note','group'].includes(k)).map(k => opt(k, TYPES[k].label, n.type)).join('')}</select>`}
+      ${annotate ? '' : `<select id="iType" data-bind="type" aria-label="Component type" style="flex:1;min-width:136px">${Object.keys(TYPES).filter(k => !['note','group'].includes(k)).map(k => opt(k, TYPES[k].label, n.type)).join('')}</select>`}
       ${n.type === 'group' ? '<button class="btn primary" data-act="to-sub" title="Move what’s inside onto its own canvas and shrink this to one box">Turn into sub-flow</button>' : ''}
       <button class="btn" data-act="dup">${n.type === 'group' ? 'Duplicate with contents' : 'Duplicate'}</button>
       <button class="btn" data-act="wrap" title="Put a new group around this">Wrap in group</button>
@@ -1360,6 +1377,12 @@ function nodePanel(n) {
   if (n.type === 'folder')
     h += `<div class="f"><label for="iOs">Computer OS</label><select id="iOs" data-bind="os">${Object.entries(OSES).map(([k, l]) => opt(k, l, n.os || '')).join('')}</select></div>
       <div class="f"><label for="iPath">Path</label><input id="iPath" data-bind="path" value="${esc(n.path)}" placeholder="${esc(OS_PATH_HINT[n.os || ''])}" spellcheck="false" style="font-family:var(--mono)"></div>`;
+  if (n.type === 'gate')
+    h += `<div class="f"><div class="sect">Checklist <small>all must pass</small></div>
+      ${(n.checks || []).map((c, j) => `<div class="rrow"><span class="kw then">✓</span><input id="gc${j}" data-bind="checks.${j}" value="${esc(c)}" placeholder="e.g. tests pass"><button class="x" data-act="del" data-path="checks" data-i="${j}" aria-label="Remove check">×</button></div>`).join('')}
+      <button class="link" data-act="push" data-path="checks" data-tpl="str">+ Add check</button></div>
+      <div class="f"><label for="iEnf">Enforced by</label><select id="iEnf" data-bind="enforce">${Object.entries(ENFORCERS).map(([k, l]) => opt(k, l, n.enforce || '')).join('')}</select>
+      <p class="help">Self-check = the agent marks its own work. Hook, script or review = something outside makes sure.</p></div>`;
   h += `<div class="f"><label for="iDesc">${n.type === 'note' ? 'Note text' : n.type === 'agent' ? 'Instructions / prompt' : n.type === 'group' ? 'Purpose' : 'Description'}</label><textarea id="iDesc" data-bind="desc" rows="3">${esc(n.desc)}</textarea></div>`;
   if (!annotate) {
     h += `<div class="f"><div class="sect">Tags <small>Enter to add</small></div>
@@ -1466,6 +1489,7 @@ insp.addEventListener('change', e => {
   if (sel.kind === 'node') {
     // New provider → its first model and that model's default effort; new model keeps the effort if it still applies.
     if (path === 'provider') { root.model = null; root.effort = null; }
+    if (path === 'type' && root.type === 'gate' && !Array.isArray(root.checks)) root.checks = [];
     fixAgent(root);
   }
   renderCanvas(); renderInspector(); save();
@@ -1514,7 +1538,7 @@ const SUBFLOW = {label:'Sub-flow', name:'Sub-flow', hint:'Group you can open', w
 function addNode(type, pt) {
   checkpoint();
   const isSub = type === 'subflow', T = isSub ? SUBFLOW : TYPES[type];
-  const n = fixAgent({id:uid(), type: isSub ? 'group' : type, x:snap(pt.x - T.w/2), y:snap(pt.y - T.h/2), w:T.w, h:T.h, name:T.name, desc:'', path:'', tags:[], rules:[], comments:[]});
+  const n = fixAgent({id:uid(), type: isSub ? 'group' : type, x:snap(pt.x - T.w/2), y:snap(pt.y - T.h/2), w:T.w, h:T.h, name:T.name, desc:'', path:'', tags:[], rules:[], comments:[], ...(type === 'gate' ? {checks:[]} : {})});
   if (isSub) n.sub = {nodes:[], edges:[], pins:{}};
   C.nodes.push(n); sel = {kind:'node', id:n.id};
   renderCanvas(); renderInspector(); save();
