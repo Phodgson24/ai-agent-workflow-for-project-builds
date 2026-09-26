@@ -95,6 +95,7 @@ header{grid-column:1/-1;display:flex;align-items:center;gap:8px;flex-wrap:wrap;p
 #bEx{width:auto;padding:5px 8px}
 #world{position:absolute;left:0;top:0;transform-origin:0 0}
 #edges,#handles{position:absolute;left:-5000px;top:-5000px;width:10000px;height:10000px;overflow:visible;pointer-events:none}
+#handles{z-index:5}   /* a selected link's end dots sit above boxes and their side dots, so they can be grabbed */
 .eh{fill:var(--surface);stroke:var(--accent);stroke-width:2.5;pointer-events:all;cursor:move}
 .eh:hover{fill:var(--accent)}
 .hit{fill:none;stroke:transparent;stroke-width:16;pointer-events:stroke;cursor:pointer}
@@ -856,7 +857,10 @@ function computeFlags() {
 
 /* ---------- canvas render ---------- */
 const vp = $('#vp'), world = $('#world');
+// Link end dots stay this many screen pixels wide at any zoom, so they are easy to grab when zoomed out.
+const EH_R = 8;
 function applyView() {
+  document.querySelectorAll('#hg .eh').forEach(c => { c.setAttribute('r', EH_R / view.z); c.style.strokeWidth = 2.5 / view.z; });
   world.style.transform = `translate(${view.x}px,${view.y}px) scale(${view.z})`;
   world.style.setProperty('--z', view.z);   // drives the zoom-to-reveal fade on sub-flow boxes
   if (typeof schedulePins === 'function') schedulePins();   // comment pins follow the canvas
@@ -1180,7 +1184,7 @@ function renderEdges() {
     arrows += `<path class="a ${e.kind}${s}${bb ? ' badged' : ''}" data-e="${e.id}" d="${g.arrow}"${bb ? ` style="--bc:var(--b-${bb})"` : ''}/>`;
     if (ba) { stubs += `<path class="bstub" data-e="${e.id}" data-end="from" d="${g.d}" style="--bc:var(--b-${ba})"/>`; socks += plug(p, ba, e.id); }
     if (bb) { stubs += `<path class="bstub" data-e="${e.id}" data-end="to" d="${g.d}" style="--bc:var(--b-${bb})"/>`; socks += plug(q, bb, e.id); }
-    if (s) handles += `<circle class="eh" data-eid="${e.id}" data-end="from" cx="${p.x}" cy="${p.y}" r="6"/><circle class="eh" data-eid="${e.id}" data-end="to" cx="${q.x}" cy="${q.y}" r="6"/>`;
+    if (s) handles += [['from', p], ['to', q]].map(([end, pt]) => `<circle class="eh" data-eid="${e.id}" data-end="${end}" cx="${pt.x}" cy="${pt.y}" r="${EH_R / view.z}" style="stroke-width:${2.5 / view.z}"><title>Drag onto another box to move this end</title></circle>`).join('');
     const cs = e.conds.map(c => c.trim()).filter(Boolean);
     // In compact detail the IF conditions fold into a small "IF ×n" chip; hover or select the link to read them.
     if (e.label || cs.length)
@@ -1411,10 +1415,19 @@ function nodePanel(n) {
   return h;
 }
 
+// Boxes a link end can move to: every box on this level except the one at the link's other end.
+function endOpts(cur, other) {
+  const lbl = n => n.type === 'pin' ? `${n.dir === 'in' ? 'In from' : 'Out to'} ${n.other}: ${n.name}` : `${n.name || 'Untitled'} (${n.sub ? 'Sub-flow' : TYPES[n.type].label})`;
+  return viewNodes().filter(n => n.id !== other).map(n => [n.id, lbl(n)]).sort((x, y) => x[1].localeCompare(y[1])).map(([id, l]) => opt(id, l, cur)).join('');
+}
 function edgePanel(e) {
   const a = getNode(e.from), b = getNode(e.to);
   return `<div class="ih"><span class="kind">Link</span><button class="x mobile-only" data-act="close" aria-label="Close details">×</button></div>
     <h3 style="margin:0;font-size:15px;line-height:1.4">${esc(a?.name || '?')} <span style="color:var(--muted)">→</span> ${esc(b?.name || '?')}</h3>
+    <div class="f"><div class="sect">Connects <small>or drag the end dots onto another box</small></div><div class="mgrid">
+      <label class="full">From<select id="eFrom" data-bind="from">${endOpts(e.from, e.to)}</select></label>
+      <label class="full">To<select id="eTo" data-bind="to">${endOpts(e.to, e.from)}</select></label>
+    </div>${a?.sub || b?.sub ? '<p class="help">This link touches a sub-flow. Moving it off the sub-flow leaves the matching entry/exit point inside unconnected.</p>' : ''}</div>
     <div class="f"><label for="eLabel">Label</label><input id="eLabel" data-bind="label" value="${esc(e.label)}" placeholder="e.g. hand off, returns summary"></div>
     <div class="f"><label for="eKind">Behaviour</label><select id="eKind" data-bind="kind">${Object.entries(KINDS).map(([k, l]) => opt(k, l, e.kind)).join('')}</select></div>
     <div class="f"><div class="sect">Attach points <small>or drag the end dots</small></div><div class="mgrid">
@@ -1492,6 +1505,8 @@ insp.addEventListener('change', e => {
   const root = bindRoot(), path = t.dataset.bind, v = t.type === 'checkbox' ? t.checked : t.value;
   setPath(root, path, v);
   if (path.endsWith('.field')) { const c = getPath(root, path.slice(0, -6)), F = FIELDS[v]; c.op = F.ops[0]; c.value = F.kind === 'type' ? 'agent' : F.kind === 'provider' ? 'claude' : F.kind === 'num' ? '0' : ''; }
+  // A link end moved to another box starts on the Auto side of it.
+  if (sel.kind === 'edge' && (path === 'from' || path === 'to')) root[path + 'Side'] = '';
   if (sel.kind === 'node') {
     // New provider → its first model and that model's default effort; new model keeps the effort if it still applies.
     if (path === 'provider') { root.model = null; root.effort = null; }
